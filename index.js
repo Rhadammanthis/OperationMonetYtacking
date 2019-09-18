@@ -2,7 +2,7 @@
  * @format
  */
 
-import {AppRegistry} from 'react-native';
+import {AppRegistry, UIManager} from 'react-native';
 import App from './App';
 import {name as appName} from './app.json';
 import firebase from 'firebase';
@@ -20,5 +20,7 @@ const config = {
 if (firebase.apps.length === 0) {
     firebase.initializeApp(config);
 }
+
+UIManager.setLayoutAnimationEnabledExperimental && UIManager.setLayoutAnimationEnabledExperimental(true);
 
 AppRegistry.registerComponent(appName, () => App);
