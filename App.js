@@ -546,7 +546,7 @@ class Main extends Component {
 							outputRange: [0, (-height * 0.25)]
 						})
 					}]
-				}, { height: height * 0.75, flexDirection: 'column', backgroundColor: '#EEEEEE', borderTopRightRadius: 10, borderTopLeftRadius: 10 }]} config={{
+				}, { height: height * 0.75, flexDirection: 'column', backgroundColor: '#EEEEEE', borderTopRightRadius: 15, borderTopLeftRadius: 15 }]} config={{
 					velocityThreshold: 0.3,
 					directionalOffsetThreshold: 80
 				}} onSwipeUp={(state) => { if (!this.state.open) this.expandPanel() }}
@@ -706,7 +706,7 @@ class History extends Component {
 				<View style={{ flexDirection: 'row', padding: 20 }}>
 					<Transition shared={this.icon}>
 						<Animated.View style={[{ width: 60, height: 60, borderRadius: 35, borderWidth: 3, borderColor: 'white', alignItems: 'center', justifyContent: 'center', backgroundColor: this.cat }]}>
-							<Icon size={34} color={'white'} name={this.icon} />
+							<Icon size={35} color={'white'} name={this.icon} />
 						</Animated.View>
 					</Transition>
 					<View style={{ flex: 1, justifyContent: 'flex-start', marginLeft: 20 }}>
