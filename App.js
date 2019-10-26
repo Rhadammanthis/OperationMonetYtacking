@@ -72,7 +72,31 @@ const CATEGORIES = {
 const BLU = '#005577'
 const BLU_LIGHT = 'rgba(0, 173, 245, 1)'
 
-let moneyData = null
+String.prototype.insert  = function(idx, rem, str) {
+    return this.slice(0, idx) + str + this.slice(idx + Math.abs(rem));
+};
+
+const applyMoneyMask = (quantity) => {
+
+	if(quantity === null)
+		return
+
+	let str = quantity.toString()
+	let size = str.length;
+	let d = Math.floor(size / 4)
+
+	console.log("Size", size)
+	console.log("D", d)
+
+	for (let i = 1; i <= d; i++) {
+		console.log("in?")
+		str = str.insert(size - (i * 3), 0, ",")
+	}
+
+	console.log("QUANTITY", str)
+
+	return str
+}
 
 class Splash extends Component {
 	constructor(props) {
@@ -224,7 +248,7 @@ class ListItem extends Component {
 							<Icon size={28} color={'white'} name={CATEGORIES[item.key].ICON} />
 						</View>
 					</Transition>
-					<Text style={{ fontSize: 16, marginTop: 5, color: 'white' }}>{item.amount} ISK</Text>
+					<Text style={{ fontSize: 16, marginTop: 5, color: 'white' }}>{applyMoneyMask(item.amount)} ISK</Text>
 				</Animated.View>
 			</TouchableOpacity>
 		)
@@ -427,7 +451,7 @@ class Main extends Component {
 					<View style={{ height:50, width:50, borderRadius: 25, backgroundColor: CATEGORIES[category].COLOR, alignItems:'center', justifyContent: 'center'}}>
 						<Icon size={20} name={CATEGORIES[category].ICON} color={'white'} />
 					</View>
-					<Text style={{ color: 'black', fontSize: 18 }}>{totals[category]} ISK</Text>
+					<Text style={{ color: 'black', fontSize: 18 }}>{applyMoneyMask(totals[category])} ISK</Text>
 				</View>
 			)
 		})
@@ -447,7 +471,7 @@ class Main extends Component {
 				</ScrollView>
 				<View style={{ borderBottomLeftRadius: 10, borderBottomRightRadius: 10, backgroundColor: BLU, justifyContent: 'flex-end', alignItems: 'flex-end', padding: 10 }}>
 					<Text style={{ color: 'white', fontSize: 16 }}>Total</Text>
-					<Text style={{ color: 'white', fontSize: 16 }}>{total} ISK</Text>
+					<Text style={{ color: 'white', fontSize: 16 }}>{applyMoneyMask(total)} ISK</Text>
 				</View>
 			</Modal>
 		)
@@ -482,7 +506,7 @@ class Main extends Component {
 			}
 
 			return (
-				<Text style={{ color: 'white', fontWeight: 'bold', fontSize: 15, marginBottom: 20 }}> Day Total: {dailyExpensesSum} ISK</Text>
+				<Text style={{ color: 'white', fontWeight: 'bold', fontSize: 15, marginBottom: 20 }}> Day Total: {applyMoneyMask(dailyExpensesSum)} ISK</Text>
 			)
 		}
 
@@ -689,7 +713,7 @@ class History extends Component {
 						this.amount);
 				}}>
 					<View style={{ flexDirection: 'row', marginHorizontal: 10, backgroundColor: "" }}>
-						<Text style={{ fontSize: 20, color: 'black' }}>{item.amount} ISK</Text>
+						<Text style={{ fontSize: 20, color: 'black' }}>{applyMoneyMask(item.amount)} ISK</Text>
 						<View style={{ flex: 1 }} />
 						<Text style={{ fontSize: 15 }}>{new Date(item.date).toLocaleTimeString()}</Text>
 					</View>
