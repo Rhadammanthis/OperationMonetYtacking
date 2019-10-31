@@ -795,7 +795,7 @@ class GestureRecognizer extends Component {
 
 	constructor(props, context) {
 		super(props, context);
-		this.state = { animated: new Animated.Value(0), lastRecordedLocation: 0, dragDelta: new Animated.Value(0) }
+		this.state = { dragDelta: new Animated.Value(0) }
 		this.swipeConfig = Object.assign(swipeConfig, props.config);
 
 		// this.diff = panelOffset
@@ -820,7 +820,8 @@ class GestureRecognizer extends Component {
 				{
 					listener: (event, gestureState) => {
 						const { onDrag } = this.props;
-						onDrag(this.state.dragDelta)
+						console.log(gestureState.dy)
+						onDrag(new Animated.Value(gestureState.dy))
 
 						// const { lastRecordedLocation, _panX } = this.state;
 
