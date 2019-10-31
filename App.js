@@ -38,6 +38,7 @@ import firebase from 'firebase';
 import { Transition, FluidNavigator } from 'react-navigation-fluid-transitions'
 import { FlatGrid } from 'react-native-super-grid';
 import * as Progress from 'react-native-progress';
+import { thisExpression } from '@babel/types';
 
 
 /**
@@ -57,6 +58,7 @@ console.log('Height', height)
 
 const calendarDayTextSize = height < 600 ? 14 : 16
 const calendarMonthTextSize = height < 600 ? 20 : 30
+const panelOffset = (height * -0.27)
 
 const CATEGORIES = {
 	vgt: { COLOR: '#238364', ICON: "carrot", NAME: 'Vegetables' },
@@ -72,28 +74,22 @@ const CATEGORIES = {
 const BLU = '#005577'
 const BLU_LIGHT = 'rgba(0, 173, 245, 1)'
 
-String.prototype.insert  = function(idx, rem, str) {
-    return this.slice(0, idx) + str + this.slice(idx + Math.abs(rem));
+String.prototype.insert = function (idx, rem, str) {
+	return this.slice(0, idx) + str + this.slice(idx + Math.abs(rem));
 };
 
 const applyMoneyMask = (quantity) => {
 
-	if(quantity === null)
+	if (quantity === null)
 		return
 
 	let str = quantity.toString()
 	let size = str.length;
 	let d = Math.floor(size / 4)
 
-	console.log("Size", size)
-	console.log("D", d)
-
 	for (let i = 1; i <= d; i++) {
-		console.log("in?")
 		str = str.insert(size - (i * 3), 0, ",")
 	}
-
-	console.log("QUANTITY", str)
 
 	return str
 }
@@ -101,8 +97,8 @@ const applyMoneyMask = (quantity) => {
 class Splash extends Component {
 	constructor(props) {
 		super(props)
-
-		this.state = { code: "161943", storedCode: "null" }
+		//161943 H&K
+		this.state = { code: "", storedCode: "null" }
 	}
 
 	_storeData = async (code) => {
@@ -259,13 +255,15 @@ class Main extends Component {
 	constructor(props) {
 		super(props);
 		// Don't call this.setState() here!
-		this.state = { selectedDay: null, modalVisible: false, catSelected: "vgt", 
-			amount: null, dayExpenses: [], refresh: false, renderTotal: false, 
-			open: false, showSummary: false, lastDay: null};
+		this.state = {
+			selectedDay: null, modalVisible: false, catSelected: "vgt",
+			amount: null, dayExpenses: [], refresh: false, renderTotal: false, anim: new Animated.Value(0),
+			open: false, showSummary: false, lastDay: null, top: Math.floor(height / 2)
+		};
 
 		this.currentMonth = new Date().toISOString().substring(0, 7)
 		this.markedDates = {
-			
+
 		}
 
 		const { navigation } = this.props;
@@ -279,11 +277,13 @@ class Main extends Component {
 
 		StatusBar.setBackgroundColor("#005577", true)
 
-		this.anim = new Animated.Value(0)
+		// this.anim = new Animated.Value(0)
 
 		Object.keys(this.data).map((day, i) => {
-			this.markedDates[day] = {marked: true} 
+			this.markedDates[day] = { marked: true }
 		})
+
+		this.animatedOffset = new Animated.Value(0)
 	}
 
 	componentDidMount() {
@@ -303,7 +303,7 @@ class Main extends Component {
 
 		});
 
-		
+
 
 		// this.setState({markedDates: this.markedDates})
 	}
@@ -314,7 +314,6 @@ class Main extends Component {
 
 	_ondDayPressed = (dateString) => {
 
-		// LayoutAnimation.configureNext(LayoutAnimation.Presets.spring);
 		LayoutAnimation.configureNext({
 			duration: 500,
 			create: {
@@ -334,16 +333,12 @@ class Main extends Component {
 			}
 		})
 
-		// this.markedDates[dateString] = {selected: true}
+		this.markedDates = { ...this.markedDates, [dateString]: { ...this.markedDates[dateString], selected: true, disableTouchEvent: false } }
 
-		console.log("MARKED",this.state)
+		if (this.state.selectedDay !== null)
+			this.markedDates = { ...this.markedDates, [this.state.selectedDay]: { ...this.markedDates[this.state.selectedDay], selected: false, disableTouchEvent: false } }
 
-		this.markedDates = {...this.markedDates, [dateString] : {...this.markedDates[dateString], selected: true, disableTouchEvent: false }}
-		
-		if(this.state.selectedDay !== null)
-			this.markedDates = {...this.markedDates, [this.state.selectedDay] : { ...this.markedDates[this.state.selectedDay], selected: false, disableTouchEvent: false}}
-
-		this.setState({ selectedDay: dateString})
+		this.setState({ selectedDay: dateString })
 		this.parseTableData(dateString)
 	}
 
@@ -359,14 +354,12 @@ class Main extends Component {
 				return { key: key, amount: dayData[key] }
 			}) : null
 		})
-
-		
 	}
 
 	onUpdated = (cat, amount) => {
-		if (amount <= 0){
+		if (amount <= 0) {
 			delete this.data[this.state.selectedDay].expenses[cat]
-			this.markedDates= {...this.markedDates, [this.state.selectedDay] : { ...this.markedDates[this.state.selectedDay], marked: false}} 
+			this.markedDates = { ...this.markedDates, [this.state.selectedDay]: { ...this.markedDates[this.state.selectedDay], marked: false } }
 		}
 		else
 			this.data[this.state.selectedDay].expenses[cat] = amount
@@ -446,9 +439,9 @@ class Main extends Component {
 		let items = Object.keys(totals).map((category, i) => {
 			total += totals[category]
 			return (
-				<View key={i} style={{ flexDirection: 'row', alignItems:'center', justifyContent: 'space-between', padding: 10 }}>
+				<View key={i} style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 10 }}>
 					{/* <Text style={{ color: 'white', fontSize: calendarDayTextSize }}>{CATEGORIES[category].NAME}</Text> */}
-					<View style={{ height:50, width:50, borderRadius: 25, backgroundColor: CATEGORIES[category].COLOR, alignItems:'center', justifyContent: 'center'}}>
+					<View style={{ height: 50, width: 50, borderRadius: 25, backgroundColor: CATEGORIES[category].COLOR, alignItems: 'center', justifyContent: 'center' }}>
 						<Icon size={20} name={CATEGORIES[category].ICON} color={'white'} />
 					</View>
 					<Text style={{ color: 'black', fontSize: 18 }}>{applyMoneyMask(totals[category])} ISK</Text>
@@ -462,11 +455,11 @@ class Main extends Component {
 				width: 350,
 				borderRadius: 10,
 			}} onClosed={() => { this.setState({ showSummary: false }) }} position={"center"} ref={"modal3"} isOpen={this.state.showSummary}
-				animationDuration={350}  swipeToClose={false}>
+				animationDuration={350} swipeToClose={false}>
 				<View style={{ borderTopLeftRadius: 10, borderTopRightRadius: 10, backgroundColor: BLU, paddingVertical: 15, alignItems: 'center', justifyContent: 'center' }}>
 					<Text style={{ color: 'white', fontSize: calendarDayTextSize }}> Month's Summary</Text>
 				</View>
-				<ScrollView style={{flex: 1, flexDirection: 'column', padding: 5}}>
+				<ScrollView style={{ flex: 1, flexDirection: 'column', padding: 5 }}>
 					{items}
 				</ScrollView>
 				<View style={{ borderBottomLeftRadius: 10, borderBottomRightRadius: 10, backgroundColor: BLU, justifyContent: 'flex-end', alignItems: 'flex-end', padding: 10 }}>
@@ -487,8 +480,6 @@ class Main extends Component {
 	}
 
 	getCategoryColor(category) {
-		// console.log("Category", category)
-		// console.log("Object", CATEGORIES[category])
 		return CATEGORIES[category].COLOR
 	}
 
@@ -506,7 +497,7 @@ class Main extends Component {
 			}
 
 			return (
-				<Text style={{ color: 'white', fontWeight: 'bold', fontSize: 15, marginBottom: 20 }}> Day Total: {applyMoneyMask(dailyExpensesSum)} ISK</Text>
+				<Text style={{ color: 'white', fontWeight: 'bold', fontSize: 17 }}> Day Total: {applyMoneyMask(dailyExpensesSum)} ISK</Text>
 			)
 		}
 
@@ -518,8 +509,8 @@ class Main extends Component {
 	}
 
 	expandPanel = () => {
-		Animated.spring(this.anim, {
-			toValue: this.state.open ? 0 : 1,
+		Animated.spring(this.animatedOffset, {
+			toValue: this.state.open ? 0 : panelOffset,
 			duration: 200,
 			friction: 6,
 			useNativeDriver: true
@@ -528,9 +519,8 @@ class Main extends Component {
 		});
 	}
 
-	updateCurrentMonth=(date) => {
-		console.log("NEW MONTH",date)
-		this.currentMonth = date.dateString.substring(0,7)
+	updateCurrentMonth = (date) => {
+		this.currentMonth = date.dateString.substring(0, 7)
 	}
 
 	render() {
@@ -551,30 +541,69 @@ class Main extends Component {
 					pagingEnabled={true}
 					calendarWidth={width}
 					calendarHeight={height * 0.525}
-					onMonthChange={(date) => { this.updateCurrentMonth(date)}}
+					onMonthChange={(date) => { this.updateCurrentMonth(date) }}
 					monthFormat={'MMMM'}
 					onDayPress={(day) => { this._ondDayPressed(day.dateString) }}
 					markedDates={this.markedDates}
-					// markedDates={{
-					// 	[this.state.selectedDay]: { selected: true, disableTouchEvent: true },
-					// 	'2019-09-17': {marked: true},
-					// }}
 				/>
-				{/* <View style={{ backgroundColor: '#005577', width: width, padding: 5, alignItems: 'center', justifyContent: 'center' }}>
-					{this._renderDayTotal()}
-				</View> */}
+
 				<GestureRecognizer style={[{
 					transform: [{
-						translateY: this.anim.interpolate({
-							inputRange: [0, 1],
-							outputRange: [0, (-height * 0.25)]
-						})
+						translateY: this.animatedOffset
 					}]
-				}, { height: height * 0.75, flexDirection: 'column', backgroundColor: '#EEEEEE', borderTopRightRadius: 15, borderTopLeftRadius: 15 }]} config={{
+				}, {
+					height: height * 0.75, flexDirection: 'column', backgroundColor: '#EEE', borderTopRightRadius: 15, borderTopLeftRadius: 15
+				}]} config={{
 					velocityThreshold: 0.3,
 					directionalOffsetThreshold: 80
-				}} onSwipeUp={(state) => { if (!this.state.open) this.expandPanel() }}
-					onSwipeDown={(state) => { if (this.state.open) this.expandPanel() }}>
+				}} onSwipeUp={(state) => { }}
+					onSwipeDown={(state) => {  }}
+					onDrag={(animatedDelta) => {
+						
+						if (this.state.open) {
+							if (panelOffset + animatedDelta.__getValue() > 0) {
+								this.animatedOffset = new Animated.Value(0)
+							}
+							else {
+								if (panelOffset + animatedDelta.__getValue() < panelOffset) {
+									this.animatedOffset = new Animated.Value(panelOffset)
+								}
+								else
+									this.animatedOffset = new Animated.Value(panelOffset + animatedDelta.__getValue())
+							}
+						}
+						else {
+							if (animatedDelta.__getValue() > 0) {
+								this.animatedOffset = new Animated.Value(0)
+							}
+							else {
+								if (animatedDelta.__getValue() < panelOffset) {
+									this.animatedOffset = new Animated.Value(panelOffset)
+								}
+								else
+									this.animatedOffset = animatedDelta
+							}
+						}
+
+						this.animatedOffset = animatedDelta
+						this.forceUpdate()
+
+					}}
+
+					onDragEnd={(endPoint) => {
+						let midPoint = (panelOffset / 2)
+
+						if (this.animatedOffset.__getValue() >= 0 || this.animatedOffset.__getValue() <= panelOffset) {
+							this.setState({ open: endPoint <= panelOffset ? true : false })
+							this.animatedOffset = new Animated.Value(this.animatedOffset.__getValue() <= panelOffset ? panelOffset : 0)
+							return;
+						}
+
+						this.setState({ open: this.animatedOffset.__getValue() >= midPoint ? true : false }, () => {
+							this.expandPanel()
+						})
+
+					}}>
 					<View style={{ marginTop: 5, alignItems: 'center', justifyContent: 'center' }}>
 						<TouchableOpacity onPress={() => {
 							this.expandPanel()
@@ -606,7 +635,6 @@ class Main extends Component {
 				}} onClosed={() => { this.setModalVisible(false) }} position={"center"} ref={"modal3"} isOpen={this.state.modalVisible}>
 					<View style={{ height: 170, width: 100, justifyContent: 'center', alignItems: 'center', borderTopLeftRadius: 10, borderBottomLeftRadius: 10, backgroundColor: this.getCategoryColor(this.state.catSelected) }}>
 						<Icon size={70} color={"white"} name={this.getCategoryIcon(this.state.catSelected)} />
-
 					</View>
 					<View style={{ flex: 1, padding: 10 }}>
 						<Text style={{ fontSize: 20 }}> Add Expense </Text>
@@ -634,7 +662,7 @@ class Main extends Component {
 							this.data[this.state.selectedDay].history[this.state.catSelected] = this.data[this.state.selectedDay].history[this.state.catSelected] || []
 							this.data[this.state.selectedDay].history[this.state.catSelected].push({ amount: parseInt(this.state.amount), date: Date.now() })
 
-							this.markedDates= {...this.markedDates, [this.state.selectedDay] : { ...this.markedDates[this.state.selectedDay], marked: true}} 
+							this.markedDates = { ...this.markedDates, [this.state.selectedDay]: { ...this.markedDates[this.state.selectedDay], marked: true } }
 
 							this.pushData(this.data)
 							this.setState({ amount: "" })
@@ -665,7 +693,7 @@ class Main extends Component {
 class History extends Component {
 	constructor(props) {
 		super(props)
-		console.log("CONSTRUCTED")
+
 		const { navigation } = this.props;
 		this.cat = CATEGORIES[navigation.getParam('cat', null)].COLOR;
 		this.icon = CATEGORIES[navigation.getParam('cat', null)].ICON;
@@ -683,8 +711,6 @@ class History extends Component {
 	}
 
 	componentDidMount() {
-		console.log("MOUNTED")
-
 		StatusBar.setBackgroundColor(this.cat, true)
 
 		BackHandler.addEventListener('hardwareBackPress', () => {
@@ -694,12 +720,9 @@ class History extends Component {
 	}
 
 	_renderHistory = () => {
-		console.log("About to render", this.history)
-
-		if (this.history.length === 0){
+		if (this.history.length === 0) {
 			StatusBar.setBackgroundColor(BLU, true)
 			return this.props.navigation.goBack();
-			
 		}
 
 		let items = this.history.map((item, i) => {
@@ -773,7 +796,11 @@ class GestureRecognizer extends Component {
 
 	constructor(props, context) {
 		super(props, context);
+		this.state = { animated: new Animated.Value(0), lastRecordedLocation: 0, dragDelta: new Animated.Value(0) }
 		this.swipeConfig = Object.assign(swipeConfig, props.config);
+
+		// this.diff = panelOffset
+		// this.diffUp = 0
 	}
 
 	componentWillReceiveProps(props) {
@@ -783,15 +810,59 @@ class GestureRecognizer extends Component {
 	componentWillMount() {
 		const responderEnd = this._handlePanResponderEnd.bind(this);
 		const shouldSetResponder = this._handleShouldSetPanResponder.bind(this);
+		const responderStart = this._handlePanStart.bind(this)
 		this._panResponder = PanResponder.create({ //stop JS beautify collapse
 			onStartShouldSetPanResponder: shouldSetResponder,
 			onMoveShouldSetPanResponder: shouldSetResponder,
 			onPanResponderRelease: responderEnd,
-			onPanResponderTerminate: responderEnd
+			onPanResponderTerminate: responderEnd,
+			onPanResponderMove: Animated.event([
+				null, { dy: this.state.dragDelta }],
+				{
+					listener: (event, gestureState) => {
+						const { onDrag } = this.props;
+						onDrag(this.state.dragDelta)
+
+						// const { lastRecordedLocation, _panX } = this.state;
+
+						// const { moveY } = gestureState
+
+						// var travelDelta = gestureState.dy
+
+						// if(gestureState.dy <= 0){
+						// 	if(gestureState.dy < panelOffset && gestureState.dy < this.diff){
+						// 		this.diff = gestureState.dy
+						// 		travelDelta = (panelOffset)
+						// 	}
+						// 	else{
+						// 		travelDelta = (panelOffset) + (gestureState.dy - this.diff)
+						// 	}
+						// 	this.diffUp = this.diff
+						// }
+						// else{
+						// 	if(gestureState.dy > 0 && gestureState.dy > this.diffUp){
+						// 		this.diffUp = gestureState.dy
+						// 		travelDelta = 0
+						// 	}
+						// 	else{
+						// 		travelDelta = 0 - (this.diffUp - gestureState.dy)
+						// 	}
+						// 	this.diff = this.diffUp
+						// }
+
+					}
+				}),
+			onPanResponderStart: responderStart,
 		});
 	}
 
+	_handlePanStart(evt, gestureState) {
+		// console.log("START",gestureState)
+	}
+
 	_handleShouldSetPanResponder(evt, gestureState) {
+		// console.log("START", evt.nativeEvent)
+		this.setState({ lastRecordedLocation: evt.nativeEvent.pageY })
 		return evt.nativeEvent.touches.length === 1 && !this._gestureIsClick(gestureState);
 	}
 
@@ -802,13 +873,16 @@ class GestureRecognizer extends Component {
 
 	_handlePanResponderEnd(evt, gestureState) {
 		const swipeDirection = this._getSwipeDirection(gestureState);
-		this._triggerSwipeHandlers(swipeDirection, gestureState);
+		this.diff = panelOffset
+		console.log("*******END**********")
+		this._triggerSwipeHandlers(swipeDirection, gestureState, evt.nativeEvent);
 	}
 
-	_triggerSwipeHandlers(swipeDirection, gestureState) {
-		const { onSwipe, onSwipeUp, onSwipeDown, onSwipeLeft, onSwipeRight } = this.props;
+	_triggerSwipeHandlers(swipeDirection, gestureState, nativeEvent) {
+		const { onSwipe, onSwipeUp, onSwipeDown, onSwipeLeft, onSwipeRight, onDragEnd } = this.props;
 		const { SWIPE_LEFT, SWIPE_RIGHT, SWIPE_UP, SWIPE_DOWN } = swipeDirections;
 		onSwipe && onSwipe(swipeDirection, gestureState);
+		onDragEnd(this.state.dragDelta.__getValue())
 		switch (swipeDirection) {
 			case SWIPE_LEFT:
 				onSwipeLeft && onSwipeLeft(gestureState);
@@ -853,6 +927,7 @@ class GestureRecognizer extends Component {
 	}
 
 	render() {
+		const { sytyle } = this.props
 		return (<Animated.View {...this.props} {...this._panResponder.panHandlers} />);
 	}
 };
@@ -906,8 +981,8 @@ const AppNavigator = FluidNavigator(
 		Main: { screen: Main },
 		History: { screen: History }
 	}, {
-		initialRouteName: 'Splash'
-	}
+	initialRouteName: 'Splash'
+}
 );
 
 let AppContainer = createAppContainer(AppNavigator);
