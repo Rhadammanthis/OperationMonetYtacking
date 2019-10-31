@@ -585,7 +585,6 @@ class Main extends Component {
 							}
 						}
 
-						this.animatedOffset = animatedDelta
 						this.forceUpdate()
 
 					}}
@@ -817,7 +816,7 @@ class GestureRecognizer extends Component {
 			onPanResponderRelease: responderEnd,
 			onPanResponderTerminate: responderEnd,
 			onPanResponderMove: Animated.event([
-				null, { dy: this.state.dragDelta }],
+				null, { dy: this.state.dragDelta }],    // gestureState arg
 				{
 					listener: (event, gestureState) => {
 						const { onDrag } = this.props;
