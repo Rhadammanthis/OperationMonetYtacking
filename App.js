@@ -38,7 +38,7 @@ import firebase from 'firebase';
 import { Transition, FluidNavigator } from 'react-navigation-fluid-transitions'
 import { FlatGrid } from 'react-native-super-grid';
 import * as Progress from 'react-native-progress';
-import { thisExpression } from '@babel/types';
+import { thisExpression, throwStatement, thisTypeAnnotation } from '@babel/types';
 
 
 /**
@@ -184,7 +184,7 @@ class Splash extends Component {
 					<View style={{ width: 160, height: 160, borderRadius: 40, borderColor: 'white', borderWidth: 7, alignItems: 'center', justifyContent: 'center' }}>
 						<Icon size={80} color={'white'} name={'money-bill-alt'} />
 					</View>
-					<Text style={{ color: 'white', fontSize: 25, fontWeight: 'bold', fontFamily: 'Roboto', marginTop: 10 }}> Operation Money Saving</Text>
+					<Text style={{ color: 'white', fontSize: 25, fontWeight: 'bold', fontFamily: 'Roboto', marginTop: 10 }}> Spendless</Text>
 				</View>
 				{this._renderForm()}
 			</View>
@@ -547,69 +547,9 @@ class Main extends Component {
 					markedDates={this.markedDates}
 				/>
 
-				<GestureRecognizer style={[{
-					transform: [{
-						translateY: this.animatedOffset
-					}]
-				}, {
-					height: height * 0.75, flexDirection: 'column', backgroundColor: '#EEE', borderTopRightRadius: 15, borderTopLeftRadius: 15
-				}]} config={{
-					velocityThreshold: 0.3,
-					directionalOffsetThreshold: 80
-				}} onSwipeUp={(state) => { }}
-					onSwipeDown={(state) => {  }}
-					onDrag={(animatedDelta) => {
-						
-						if (this.state.open) {
-							if (panelOffset + animatedDelta.__getValue() > 0) {
-								this.animatedOffset = new Animated.Value(0)
-							}
-							else {
-								if (panelOffset + animatedDelta.__getValue() < panelOffset) {
-									this.animatedOffset = new Animated.Value(panelOffset)
-								}
-								else
-									this.animatedOffset = new Animated.Value(panelOffset + animatedDelta.__getValue())
-							}
-						}
-						else {
-							if (animatedDelta.__getValue() > 0) {
-								this.animatedOffset = new Animated.Value(0)
-							}
-							else {
-								if (animatedDelta.__getValue() < panelOffset) {
-									this.animatedOffset = new Animated.Value(panelOffset)
-								}
-								else
-									this.animatedOffset = animatedDelta
-							}
-						}
-
-						this.forceUpdate()
-
-					}}
-
-					onDragEnd={(endPoint) => {
-						let midPoint = (panelOffset / 2)
-
-						if (this.animatedOffset.__getValue() >= 0 || this.animatedOffset.__getValue() <= panelOffset) {
-							this.setState({ open: endPoint <= panelOffset ? true : false })
-							this.animatedOffset = new Animated.Value(this.animatedOffset.__getValue() <= panelOffset ? panelOffset : 0)
-							return;
-						}
-
-						this.setState({ open: this.animatedOffset.__getValue() >= midPoint ? true : false }, () => {
-							this.expandPanel()
-						})
-
-					}}>
-					<View style={{ marginTop: 5, alignItems: 'center', justifyContent: 'center' }}>
-						<TouchableOpacity onPress={() => {
-							this.expandPanel()
-						}}>
-							<Icon size={20} name={'grip-lines'} color={'grey'} />
-						</TouchableOpacity>
-					</View>
+				<Draggable style={{
+					height: height * 0.73, flexDirection: 'column', backgroundColor: '#EEE', borderTopRightRadius: 15, borderTopLeftRadius: 15
+				}}>
 					<FlatGrid
 						style={{ flex: 1 }}
 						itemDimension={(width - 50) / 3}
@@ -621,10 +561,10 @@ class Main extends Component {
 								history={this.data[this.state.selectedDay].history[item.key]}
 								onUpdated={this.onUpdated} />)
 						} />
-					<View style={{ marginBottom: 20, backgroundColor: '#005577', width: width, alignItems: 'center', justifyContent: 'center', height: 70 }}>
+					<View style={{ backgroundColor: '#005577', width: width, alignItems: 'center', justifyContent: 'center', height: 70 }}>
 						{this._renderDayTotal()}
 					</View>
-				</GestureRecognizer>
+				</Draggable>
 				{/* ***************** MODAL ****************** */}
 				<Modal style={{
 					height: 170,
@@ -791,146 +731,44 @@ function isValidSwipe(velocity, velocityThreshold, directionalOffset, directiona
 	return Math.abs(velocity) > velocityThreshold && Math.abs(directionalOffset) < directionalOffsetThreshold;
 }
 
-class GestureRecognizer extends Component {
-
+class Draggable extends Component {
 	constructor(props, context) {
 		super(props, context);
-		this.state = { dragDelta: new Animated.Value(0) }
-		this.swipeConfig = Object.assign(swipeConfig, props.config);
+		this.state = { dragDelta: new Animated.Value(0), open: false }
 
-		// this.diff = panelOffset
-		// this.diffUp = 0
-	}
-
-	componentWillReceiveProps(props) {
-		this.swipeConfig = Object.assign(swipeConfig, props.config);
 	}
 
 	componentWillMount() {
-		const responderEnd = this._handlePanResponderEnd.bind(this);
-		const shouldSetResponder = this._handleShouldSetPanResponder.bind(this);
-		const responderStart = this._handlePanStart.bind(this)
-		this._panResponder = PanResponder.create({ //stop JS beautify collapse
-			onStartShouldSetPanResponder: shouldSetResponder,
-			onMoveShouldSetPanResponder: shouldSetResponder,
-			onPanResponderRelease: responderEnd,
-			onPanResponderTerminate: responderEnd,
+
+		this._val = 0
+		this.state.dragDelta.addListener((value) => { this._val = value.value; console.log(value) });
+
+		this.panResponder = PanResponder.create({
+			onStartShouldSetPanResponder: (e, gesture) => true,
+			onPanResponderGrant: (e, gestureState) => {
+				this.state.dragDelta.setOffset(this._val)
+				this.state.dragDelta.setValue(0)
+			},
 			onPanResponderMove: Animated.event([
-				null, { dy: this.state.dragDelta }],    // gestureState arg
-				{
-					listener: (event, gestureState) => {
-						const { onDrag } = this.props;
-						console.log(gestureState.dy)
-						onDrag(new Animated.Value(gestureState.dy))
-
-						// const { lastRecordedLocation, _panX } = this.state;
-
-						// const { moveY } = gestureState
-
-						// var travelDelta = gestureState.dy
-
-						// if(gestureState.dy <= 0){
-						// 	if(gestureState.dy < panelOffset && gestureState.dy < this.diff){
-						// 		this.diff = gestureState.dy
-						// 		travelDelta = (panelOffset)
-						// 	}
-						// 	else{
-						// 		travelDelta = (panelOffset) + (gestureState.dy - this.diff)
-						// 	}
-						// 	this.diffUp = this.diff
-						// }
-						// else{
-						// 	if(gestureState.dy > 0 && gestureState.dy > this.diffUp){
-						// 		this.diffUp = gestureState.dy
-						// 		travelDelta = 0
-						// 	}
-						// 	else{
-						// 		travelDelta = 0 - (this.diffUp - gestureState.dy)
-						// 	}
-						// 	this.diff = this.diffUp
-						// }
-
-					}
-				}),
-			onPanResponderStart: responderStart,
-		});
-	}
-
-	_handlePanStart(evt, gestureState) {
-		// console.log("START",gestureState)
-	}
-
-	_handleShouldSetPanResponder(evt, gestureState) {
-		// console.log("START", evt.nativeEvent)
-		this.setState({ lastRecordedLocation: evt.nativeEvent.pageY })
-		return evt.nativeEvent.touches.length === 1 && !this._gestureIsClick(gestureState);
-	}
-
-	_gestureIsClick(gestureState) {
-		return Math.abs(gestureState.dx) < swipeConfig.gestureIsClickThreshold
-			&& Math.abs(gestureState.dy) < swipeConfig.gestureIsClickThreshold;
-	}
-
-	_handlePanResponderEnd(evt, gestureState) {
-		const swipeDirection = this._getSwipeDirection(gestureState);
-		this.diff = panelOffset
-		console.log("*******END**********")
-		this._triggerSwipeHandlers(swipeDirection, gestureState, evt.nativeEvent);
-	}
-
-	_triggerSwipeHandlers(swipeDirection, gestureState, nativeEvent) {
-		const { onSwipe, onSwipeUp, onSwipeDown, onSwipeLeft, onSwipeRight, onDragEnd } = this.props;
-		const { SWIPE_LEFT, SWIPE_RIGHT, SWIPE_UP, SWIPE_DOWN } = swipeDirections;
-		onSwipe && onSwipe(swipeDirection, gestureState);
-		onDragEnd(this.state.dragDelta.__getValue())
-		switch (swipeDirection) {
-			case SWIPE_LEFT:
-				onSwipeLeft && onSwipeLeft(gestureState);
-				break;
-			case SWIPE_RIGHT:
-				onSwipeRight && onSwipeRight(gestureState);
-				break;
-			case SWIPE_UP:
-				onSwipeUp && onSwipeUp(gestureState);
-				break;
-			case SWIPE_DOWN:
-				onSwipeDown && onSwipeDown(gestureState);
-				break;
-		}
-	}
-
-	_getSwipeDirection(gestureState) {
-		const { SWIPE_LEFT, SWIPE_RIGHT, SWIPE_UP, SWIPE_DOWN } = swipeDirections;
-		const { dx, dy } = gestureState;
-		if (this._isValidHorizontalSwipe(gestureState)) {
-			return (dx > 0)
-				? SWIPE_RIGHT
-				: SWIPE_LEFT;
-		} else if (this._isValidVerticalSwipe(gestureState)) {
-			return (dy > 0)
-				? SWIPE_DOWN
-				: SWIPE_UP;
-		}
-		return null;
-	}
-
-	_isValidHorizontalSwipe(gestureState) {
-		const { vx, dy } = gestureState;
-		const { velocityThreshold, directionalOffsetThreshold } = this.swipeConfig;
-		return isValidSwipe(vx, velocityThreshold, dy, directionalOffsetThreshold);
-	}
-
-	_isValidVerticalSwipe(gestureState) {
-		const { vy, dx } = gestureState;
-		const { velocityThreshold, directionalOffsetThreshold } = this.swipeConfig;
-		return isValidSwipe(vy, velocityThreshold, dx, directionalOffsetThreshold);
+				null, { dy: this.state.dragDelta }])
+		})
 	}
 
 	render() {
-		const { sytyle } = this.props
-		return (<Animated.View {...this.props} {...this._panResponder.panHandlers} />);
+
+		const { style } = this.props
+		this.clampedValue = Animated.diffClamp(this.state.dragDelta, panelOffset, 0)
+
+		return (
+			<Animated.View {...this.panResponder.panHandlers} style={[style, { transform: [{ translateY: this.clampedValue }] }]}>
+				<View style={{ marginVertical: 5, alignItems: 'center', justifyContent: 'center' }}>
+					<Icon size={20} name={'grip-lines'} color={'grey'} />
+				</View>
+				{this.props.children}
+			</Animated.View>
+		)
 	}
-};
+}
 
 
 const styles = StyleSheet.create({
