@@ -12,8 +12,7 @@ import {
 	AsyncStorage,
 	StyleSheet,
 	Keyboard,
-	View,
-	Text,
+	View, Text,
 	StatusBar,
 	Button, PanResponder,
 	Dimensions, ScrollView,
@@ -38,7 +37,10 @@ import firebase from 'firebase';
 import { Transition, FluidNavigator } from 'react-navigation-fluid-transitions'
 import { FlatGrid } from 'react-native-super-grid';
 import * as Progress from 'react-native-progress';
+import { PieChart } from 'react-native-svg-charts'
+// import { Text } from 'react-native-svg'
 import { thisExpression, throwStatement, thisTypeAnnotation } from '@babel/types';
+import { createNativeWrapper } from 'react-native-gesture-handler';
 
 
 /**
@@ -254,17 +256,20 @@ class ListItem extends Component {
 class Main extends Component {
 	constructor(props) {
 		super(props);
-		// Don't call this.setState() here!
+
 		this.state = {
 			selectedDay: null, modalVisible: false, catSelected: "vgt",
 			amount: null, dayExpenses: [], refresh: false, renderTotal: false, anim: new Animated.Value(0),
-			open: false, showSummary: false, lastDay: null, top: Math.floor(height / 2)
+			open: false, showSummary: false, lastDay: null, top: Math.floor(height / 2), selectedSlice: {
+				label: 'vgt', value: 0 }, labelWidth: 0
 		};
 
-		this.currentMonth = new Date().toISOString().substring(0, 7)
-		this.markedDates = {
+		this.markedDates = {}
+		Object.keys(this.data).map((day, i) => {
+			this.markedDates[day] = { marked: true }
+		})
 
-		}
+		this.currentMonth = new Date().toISOString().substring(0, 7)
 
 		const { navigation } = this.props;
 		this.data = navigation.getParam('moneyData', null);
@@ -276,12 +281,6 @@ class Main extends Component {
 		this.statusBarTheme = Platform.OS === 'android' ? 'light-content' : 'dark-content'
 
 		StatusBar.setBackgroundColor("#005577", true)
-
-		// this.anim = new Animated.Value(0)
-
-		Object.keys(this.data).map((day, i) => {
-			this.markedDates[day] = { marked: true }
-		})
 
 		this.animatedOffset = new Animated.Value(0)
 	}
@@ -436,36 +435,55 @@ class Main extends Component {
 			})
 		})
 
-		let items = Object.keys(totals).map((category, i) => {
-			total += totals[category]
-			return (
-				<View key={i} style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 10 }}>
-					{/* <Text style={{ color: 'white', fontSize: calendarDayTextSize }}>{CATEGORIES[category].NAME}</Text> */}
-					<View style={{ height: 50, width: 50, borderRadius: 25, backgroundColor: CATEGORIES[category].COLOR, alignItems: 'center', justifyContent: 'center' }}>
-						<Icon size={20} name={CATEGORIES[category].ICON} color={'white'} />
-					</View>
-					<Text style={{ color: 'black', fontSize: 18 }}>{applyMoneyMask(totals[category])} ISK</Text>
-				</View>
-			)
+		//To prevent excessive state updates
+		if(this.state.selectedSlice.value === 0)
+			this.setState({ selectedSlice: { value: totals.vgt, label: 'vgt'}})
+
+		const { labelWidth, selectedSlice } = this.state;
+		const { label, value } = selectedSlice;
+
+		const data = Object.keys(totals).map((key, index) => {
+			total += totals[key]
+			return {
+				key,
+				value: totals[key],
+				svg: { fill: CATEGORIES[key].COLOR },
+				arc: { outerRadius: '90%', padAngle: label === key ? 0.05 : 0 },
+				onPress: () => {
+					LayoutAnimation.configureNext(LayoutAnimation.Presets.spring);
+					this.setState({ selectedSlice: { label: key, value: applyMoneyMask(totals[key]) } })
+				}
+			}
 		})
 
 		return (
 			<Modal style={{
-				height: height * 0.5,
+				height: height * 0.6,
 				width: 350,
 				borderRadius: 10,
 			}} onClosed={() => { this.setState({ showSummary: false }) }} position={"center"} ref={"modal3"} isOpen={this.state.showSummary}
 				animationDuration={350} swipeToClose={false}>
-				<View style={{ borderTopLeftRadius: 10, borderTopRightRadius: 10, backgroundColor: BLU, paddingVertical: 15, alignItems: 'center', justifyContent: 'center' }}>
-					<Text style={{ color: 'white', fontSize: calendarDayTextSize }}> Month's Summary</Text>
+				<Text style={{textAlign: 'left', paddingLeft: 10, fontSize: 20, color: 'black', paddingVertical: 10}}> 
+					Month's Summary
+				</Text>
+				<View style={{ justifyContent: 'center', flex: 1 }}>
+					<PieChart
+						style={{ height: height * 0.45 }}
+						outerRadius={'85%'}
+						innerRadius={'55%'}
+						data={data}
+					/>
+					<View style={{ left: (350 / 2 - ((height *.15) / 2)), position: 'absolute', width: height *.15}}>
+						<View style={{ padding: 5, borderRadius: 15, borderWidth: 2, borderColor: 'white', alignItems: 'center', justifyContent: 'center', backgroundColor: CATEGORIES[label].COLOR }}>
+							<Icon style={{ marginVertical: 5}} size={28} color={'white'} name={CATEGORIES[label].ICON} />
+							<Text style={{ color: 'white', marginTop: 5 }}>{CATEGORIES[label].NAME}</Text>
+							<Text style={{ color: 'white' }}>{value} ISK</Text>
+						</View>
+					</View>
 				</View>
-				<ScrollView style={{ flex: 1, flexDirection: 'column', padding: 5 }}>
-					{items}
-				</ScrollView>
-				<View style={{ borderBottomLeftRadius: 10, borderBottomRightRadius: 10, backgroundColor: BLU, justifyContent: 'flex-end', alignItems: 'flex-end', padding: 10 }}>
-					<Text style={{ color: 'white', fontSize: 16 }}>Total</Text>
-					<Text style={{ color: 'white', fontSize: 16 }}>{applyMoneyMask(total)} ISK</Text>
-				</View>
+				<Text style={{textAlign: 'center', fontWeight: 'bold', fontSize: 17, color: 'white', borderBottomLeftRadius: 10, borderBottomRightRadius: 10, backgroundColor: BLU, justifyContent: 'center', alignItems: 'center', paddingVertical: 10}}> 
+					Total: ${applyMoneyMask(total)}
+				</Text>
 			</Modal>
 		)
 	}
@@ -714,23 +732,6 @@ class History extends Component {
 	}
 }
 
-const swipeDirections = {
-	SWIPE_UP: 'SWIPE_UP',
-	SWIPE_DOWN: 'SWIPE_DOWN',
-	SWIPE_LEFT: 'SWIPE_LEFT',
-	SWIPE_RIGHT: 'SWIPE_RIGHT'
-};
-
-const swipeConfig = {
-	velocityThreshold: 0.1,
-	directionalOffsetThreshold: 80,
-	gestureIsClickThreshold: 5
-};
-
-function isValidSwipe(velocity, velocityThreshold, directionalOffset, directionalOffsetThreshold) {
-	return Math.abs(velocity) > velocityThreshold && Math.abs(directionalOffset) < directionalOffsetThreshold;
-}
-
 class Draggable extends Component {
 	constructor(props, context) {
 		super(props, context);
@@ -741,7 +742,7 @@ class Draggable extends Component {
 	componentWillMount() {
 
 		this._val = 0
-		this.state.dragDelta.addListener((value) => { this._val = value.value; console.log(value) });
+		this.state.dragDelta.addListener((value) => { this._val = value.value });
 
 		this.panResponder = PanResponder.create({
 			onStartShouldSetPanResponder: (e, gesture) => true,
