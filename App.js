@@ -11,11 +11,11 @@ import { Calendar, CalendarList, Agenda } from 'react-native-calendars';
 import {
 	AsyncStorage,
 	StyleSheet,
-	Keyboard,
+	Keyboard, TouchableNativeFeedback,
 	View, Text,
-	StatusBar,
+	StatusBar, Image,
 	Button, PanResponder,
-	Dimensions, ScrollView,
+	Dimensions, FlatList,
 	TextInput, BackHandler,
 	TouchableOpacity, Animated,
 	Platform, LayoutAnimation
@@ -38,9 +38,7 @@ import { Transition, FluidNavigator } from 'react-navigation-fluid-transitions'
 import { FlatGrid } from 'react-native-super-grid';
 import * as Progress from 'react-native-progress';
 import { PieChart } from 'react-native-svg-charts'
-// import { Text } from 'react-native-svg'
-import { thisExpression, throwStatement, thisTypeAnnotation } from '@babel/types';
-import { createNativeWrapper } from 'react-native-gesture-handler';
+import * as Data from './data/data'
 
 
 /**
@@ -75,6 +73,7 @@ const CATEGORIES = {
 
 const BLU = '#005577'
 const BLU_LIGHT = 'rgba(0, 173, 245, 1)'
+const BLU_LIGHT_ALPHA = 'rgba(0, 173, 245, 0.25)'
 
 String.prototype.insert = function (idx, rem, str) {
 	return this.slice(0, idx) + str + this.slice(idx + Math.abs(rem));
@@ -100,7 +99,7 @@ class Splash extends Component {
 	constructor(props) {
 		super(props)
 		//161943 H&K
-		this.state = { code: "", storedCode: "null" }
+		this.state = { code: "", storedCode: "null", settings: {} }
 	}
 
 	_storeData = async (code) => {
@@ -114,40 +113,79 @@ class Splash extends Component {
 
 	_retrieveData = async () => {
 		try {
-			const value = await AsyncStorage.getItem('@AccountCode:key24');
-			this.setState({ storedCode: value })
-			console.log(value)
-			return value
+			const code = await AsyncStorage.getItem('@AccountCode:key24');
+			this.setState({ storedCode: code })
+			console.log("Code", code)
+
+			try{
+				let snapshot = await firebase.database().ref(`/${code}/`).once('value');
+				return snapshot.val();
+			}
+			catch(error) {
+				return error
+			}
+				
 		} catch (error) {
-			// Error retrieving data
+			return error
 		}
 	};
 
-	fetchData = async (code) => {
-		let snapshot = await firebase.database().ref(`/${code}/`)
-			.once('value');
+	_retrieveSettings = async () => {
+		try {
+			const value = await AsyncStorage.getItem('@AccountCode:settings3');
+			console.log("Settings", value)
 
-		const { navigate } = this.props.navigation;
-		console.log("Ready to continue with data", snapshot.val())
-		navigate('Main', { moneyData: snapshot.val(), code: code })
-	}
+			if (value === null)
+				return Promise.reject(new Error("No data"))
+
+			this.setState({ settings: value })
+			return value
+		} catch (error) {
+			// Error retrieving data
+			return error
+		}
+	};
 
 	componentDidMount() {
 
-		this._retrieveData().then((code) => {
-			if (code === null)
-				return
+		const didBlurSubscription = this.props.navigation.addListener(
+			'didFocus',
+			payload => {
+			  console.log('didFocus', payload);
+			  const { action } = payload;
 
-			console.log(code)
-			this.fetchData(code)
-		})
+			  if(action.type === "Navigation/COMPLETE_TRANSITION"){
+				this._retrieveData()
+				.then(value => {
+					console.log("Retrieve data success",value)
+					// this.props.navigation.navigate('Main', { moneyData: value, code: this.state.storedCode })
+				
+				})
+				.catch(error => console.log("Retrieve data error", error))
+			  }
+			}
+		  );
+
+		this._retrieveSettings()
+			.then((value) => this._retrieveData()
+				.then(value => {
+					console.log("Retrieve data success",value)
+					this.props.navigation.navigate('Main', { moneyData: value, code: this.state.storedCode })
+				})
+				.catch(error => console.log("Retrieve data error",error)))
+			.catch((error) => this.props.navigation.navigate('Currency'))
 
 	}
 
 	onSubmit = (code) => {
 		this.setState({ storedCode: code })
 		this._storeData(code)
-		this.fetchData(code)
+		.then(( velue) => this._retrieveData()
+			.then(value => {
+				console.log("Retrieve data success",value)
+				this.props.navigation.navigate('Main', { moneyData: value, code: this.state.storedCode })
+			})
+		)
 	}
 
 	_renderForm = () => {
@@ -194,6 +232,101 @@ class Splash extends Component {
 	}
 }
 
+class Currency extends Component {
+	constructor(props) {
+		super(props)
+		//161943 H&K
+		this.state = { selectedCountry: {}, animCloseButton: new Animated.Value(0) }
+	}
+
+	componentDidMount() {
+
+
+	}
+
+	Item = ({ country }) => {
+		// console.log(country)
+
+		const { selectedCountry } = this.state
+
+		const springAnimation = Animated.spring(this.state.animCloseButton, {
+			toValue: 1,
+			duration: 200,
+			friction: 8,
+			tension: 50,
+			useNativeDriver: true
+		})
+
+		const selected = { backgroundColor: BLU_LIGHT_ALPHA }
+
+		return (
+			<TouchableNativeFeedback onPress={(ev) => { this.setState({ selectedCountry: country }); springAnimation.start() }} style={{ position: 'absolute' }} >
+				<View style={[{ paddingHorizontal: 10, paddingVertical: 15, flexDirection: 'row', width: width * 0.75 }, country.id === selectedCountry.id ? selected : {}]}>
+					<Image style={{ width: 40, height: 40 }} source={country.image} />
+					<View style={{ justifyContent: 'center', alignItems: 'center', marginHorizontal: 15 }}>
+						<Text style={{ color: 'black', fontSize: 16, textAlign: 'center' }}>{country.name}</Text>
+					</View>
+					<View style={{ justifyContent: 'center', flex: 1, alignItems: 'flex-end' }}>
+						<Text style={{ color: 'black', fontSize: 16, textAlign: 'center' }}>{country.currency}</Text>
+					</View>
+				</View>
+			</TouchableNativeFeedback>
+		)
+	}
+
+	_storeData = async (country) => {
+		try {
+			await AsyncStorage.setItem('@AccountCode:settings3', country.currency);
+			return {success: true, value: country}
+		} catch (error) {
+			// Error saving data
+			return {success: false, value: error}
+		}
+	};
+
+	_renderAcceptButton = () => {
+		const { animCloseButton, selectedCountry } = this.state
+
+		return (
+			<TouchableNativeFeedback onPress={(evnt) => {
+					this._storeData(selectedCountry)
+					.then((value) => { console.log(value); this.props.navigation.goBack()})
+					.catch((error) => { console.log(error)})
+				}} 
+				style={{ borderRadius: 20 }}>
+				<Animated.View style={[{ alignItems: 'center', justifyContent: 'center', backgroundColor: BLU_LIGHT, paddingHorizontal: 20, paddingVertical: 10, borderRadius: 20 }, {
+					transform: [{
+						translateY: animCloseButton.interpolate({
+							inputRange: [0, 1],
+							outputRange: [300, 20]
+						})
+					}]
+				}]}>
+					<Text style={{ color: 'white' }}> SELECT </Text>
+				</Animated.View>
+			</TouchableNativeFeedback>
+		)
+	}
+
+	render() {
+		return (
+			<View style={{ flex: 1, justifyContent: 'center', backgroundColor: BLU, alignItems: 'center' }}>
+				<Text style={{ color: 'white', textAlign: 'center', fontSize: 25, maxWidth: width * 0.75, marginVertical: 25 }}>
+					Select your prefered currency
+				</Text>
+				<View style={{ height: height * 0.5, backgroundColor: 'white', borderRadius: 10, marginBottom: 15 }}>
+					<FlatList
+						data={Data.countries}
+						renderItem={({ item }) => { return (<this.Item country={item} />) }}
+						keyExtractor={country => country.id}
+						ItemSeparatorComponent={() => <View style={{ height: 0.4, backgroundColor: 'grey' }} />}
+					/>
+				</View>
+				{this._renderAcceptButton()}
+			</View>
+		)
+	}
+}
 
 class ListItem extends Component {
 	constructor(props) {
@@ -261,9 +394,12 @@ class Main extends Component {
 			selectedDay: null, modalVisible: false, catSelected: "vgt",
 			amount: null, dayExpenses: [], refresh: false, renderTotal: false, anim: new Animated.Value(0),
 			open: false, showSummary: false, lastDay: null, top: Math.floor(height / 2), selectedSlice: {
-				label: 'vgt', value: 0 }, labelWidth: 0
+				label: 'vgt', value: 0
+			}, labelWidth: 0
 		};
 
+		const { navigation } = this.props;
+		this.data = navigation.getParam('moneyData', null);
 		this.markedDates = {}
 		Object.keys(this.data).map((day, i) => {
 			this.markedDates[day] = { marked: true }
@@ -271,8 +407,6 @@ class Main extends Component {
 
 		this.currentMonth = new Date().toISOString().substring(0, 7)
 
-		const { navigation } = this.props;
-		this.data = navigation.getParam('moneyData', null);
 
 		console.log("Data", this.data)
 
@@ -436,8 +570,8 @@ class Main extends Component {
 		})
 
 		//To prevent excessive state updates
-		if(this.state.selectedSlice.value === 0)
-			this.setState({ selectedSlice: { value: totals.vgt, label: 'vgt'}})
+		if (this.state.selectedSlice.value === 0)
+			this.setState({ selectedSlice: { value: applyMoneyMask(totals.vgt), label: 'vgt' } })
 
 		const { labelWidth, selectedSlice } = this.state;
 		const { label, value } = selectedSlice;
@@ -463,7 +597,7 @@ class Main extends Component {
 				borderRadius: 10,
 			}} onClosed={() => { this.setState({ showSummary: false }) }} position={"center"} ref={"modal3"} isOpen={this.state.showSummary}
 				animationDuration={350} swipeToClose={false}>
-				<Text style={{textAlign: 'left', paddingLeft: 10, fontSize: 20, color: 'black', paddingVertical: 10}}> 
+				<Text style={{ textAlign: 'left', paddingLeft: 10, fontSize: 20, color: 'black', paddingVertical: 10 }}>
 					Month's Summary
 				</Text>
 				<View style={{ justifyContent: 'center', flex: 1 }}>
@@ -473,15 +607,17 @@ class Main extends Component {
 						innerRadius={'55%'}
 						data={data}
 					/>
-					<View style={{ left: (350 / 2 - ((height *.15) / 2)), position: 'absolute', width: height *.15}}>
-						<View style={{ padding: 5, borderRadius: 15, borderWidth: 2, borderColor: 'white', alignItems: 'center', justifyContent: 'center', backgroundColor: CATEGORIES[label].COLOR }}>
-							<Icon style={{ marginVertical: 5}} size={28} color={'white'} name={CATEGORIES[label].ICON} />
-							<Text style={{ color: 'white', marginTop: 5 }}>{CATEGORIES[label].NAME}</Text>
-							<Text style={{ color: 'white' }}>{value} ISK</Text>
-						</View>
+					<View style={{
+						left: (350 / 2 - (width * 0.150)), position: 'absolute', width: width * 0.3, height: width * 0.3,
+						borderRadius: width * 0.150, borderWidth: 3, borderColor: CATEGORIES[label].COLOR, backgroundColor: 'white',
+						padding: 5, alignItems: 'center', justifyContent: 'center'
+					}}>
+						<Icon style={{ marginVertical: 5 }} size={30} color={CATEGORIES[label].COLOR} name={CATEGORIES[label].ICON} />
+						<Text style={{ color: CATEGORIES[label].COLOR, marginTop: 5 }}>{CATEGORIES[label].NAME}</Text>
+						<Text style={{ color: CATEGORIES[label].COLOR }}>{value} ISK</Text>
 					</View>
 				</View>
-				<Text style={{textAlign: 'center', fontWeight: 'bold', fontSize: 17, color: 'white', borderBottomLeftRadius: 10, borderBottomRightRadius: 10, backgroundColor: BLU, justifyContent: 'center', alignItems: 'center', paddingVertical: 10}}> 
+				<Text style={{ textAlign: 'center', fontWeight: 'bold', fontSize: 17, color: 'white', borderBottomLeftRadius: 10, borderBottomRightRadius: 10, backgroundColor: BLU, justifyContent: 'center', alignItems: 'center', paddingVertical: 10 }}>
 					Total: ${applyMoneyMask(total)}
 				</Text>
 			</Modal>
@@ -817,6 +953,7 @@ const styles = StyleSheet.create({
 const AppNavigator = FluidNavigator(
 	{
 		Splash: { screen: Splash },
+		Currency: { screen: Currency },
 		Main: { screen: Main },
 		History: { screen: History }
 	}, {
@@ -828,7 +965,7 @@ let AppContainer = createAppContainer(AppNavigator);
 
 export default () => (
 	<AppContainer onNavigationStateChange={(prevState, newState, action) => {
-		if (action.type === "Navigation/BACK" && newState.index === 0)
-			BackHandler.exitApp()
+		{/* if (action.type === "Navigation/BACK" && newState.index === 0)
+			BackHandler.exitApp() */}
 	}} />
 )
