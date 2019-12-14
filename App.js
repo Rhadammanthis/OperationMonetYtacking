@@ -6,7 +6,7 @@
  * @flow
  */
 
-import React, { Component } from 'react';
+import React, { Component, useState, useEffect } from 'react';
 import { Calendar, CalendarList, Agenda } from 'react-native-calendars';
 import {
 	AsyncStorage,
@@ -39,6 +39,7 @@ import { FlatGrid } from 'react-native-super-grid';
 import * as Progress from 'react-native-progress';
 import { PieChart } from 'react-native-svg-charts'
 import * as Data from './data/data'
+import { thisExpression } from '@babel/types';
 
 
 /**
@@ -81,7 +82,7 @@ String.prototype.insert = function (idx, rem, str) {
 
 const applyMoneyMask = (quantity) => {
 
-	if (quantity === null)
+	if (quantity === null || quantity === undefined)
 		return
 
 	let str = quantity.toString()
@@ -117,14 +118,14 @@ class Splash extends Component {
 			this.setState({ storedCode: code })
 			console.log("Code", code)
 
-			try{
+			try {
 				let snapshot = await firebase.database().ref(`/${code}/`).once('value');
 				return snapshot.val();
 			}
-			catch(error) {
+			catch (error) {
 				return error
 			}
-				
+
 		} catch (error) {
 			return error
 		}
@@ -151,28 +152,28 @@ class Splash extends Component {
 		const didBlurSubscription = this.props.navigation.addListener(
 			'didFocus',
 			payload => {
-			  console.log('didFocus', payload);
-			  const { action } = payload;
+				console.log('didFocus', payload);
+				const { action } = payload;
 
-			  if(action.type === "Navigation/COMPLETE_TRANSITION"){
-				this._retrieveData()
-				.then(value => {
-					console.log("Retrieve data success",value)
-					// this.props.navigation.navigate('Main', { moneyData: value, code: this.state.storedCode })
-				
-				})
-				.catch(error => console.log("Retrieve data error", error))
-			  }
+				if (action.type === "Navigation/COMPLETE_TRANSITION") {
+					this._retrieveData()
+						.then(value => {
+							console.log("Retrieve data success", value)
+							// this.props.navigation.navigate('Main', { moneyData: value, code: this.state.storedCode })
+
+						})
+						.catch(error => console.log("Retrieve data error", error))
+				}
 			}
-		  );
+		);
 
 		this._retrieveSettings()
 			.then((value) => this._retrieveData()
 				.then(value => {
-					console.log("Retrieve data success",value)
+					console.log("Retrieve data success", value)
 					this.props.navigation.navigate('Main', { moneyData: value, code: this.state.storedCode })
 				})
-				.catch(error => console.log("Retrieve data error",error)))
+				.catch(error => console.log("Retrieve data error", error)))
 			.catch((error) => this.props.navigation.navigate('Currency'))
 
 	}
@@ -180,12 +181,12 @@ class Splash extends Component {
 	onSubmit = (code) => {
 		this.setState({ storedCode: code })
 		this._storeData(code)
-		.then(( velue) => this._retrieveData()
-			.then(value => {
-				console.log("Retrieve data success",value)
-				this.props.navigation.navigate('Main', { moneyData: value, code: this.state.storedCode })
-			})
-		)
+			.then((velue) => this._retrieveData()
+				.then(value => {
+					console.log("Retrieve data success", value)
+					this.props.navigation.navigate('Main', { moneyData: value, code: this.state.storedCode })
+				})
+			)
 	}
 
 	_renderForm = () => {
@@ -277,10 +278,10 @@ class Currency extends Component {
 	_storeData = async (country) => {
 		try {
 			await AsyncStorage.setItem('@AccountCode:settings3', country.currency);
-			return {success: true, value: country}
+			return { success: true, value: country }
 		} catch (error) {
 			// Error saving data
-			return {success: false, value: error}
+			return { success: false, value: error }
 		}
 	};
 
@@ -289,10 +290,10 @@ class Currency extends Component {
 
 		return (
 			<TouchableNativeFeedback onPress={(evnt) => {
-					this._storeData(selectedCountry)
-					.then((value) => { console.log(value); this.props.navigation.goBack()})
-					.catch((error) => { console.log(error)})
-				}} 
+				this._storeData(selectedCountry)
+					.then((value) => { console.log(value); this.props.navigation.goBack() })
+					.catch((error) => { console.log(error) })
+			}}
 				style={{ borderRadius: 20 }}>
 				<Animated.View style={[{ alignItems: 'center', justifyContent: 'center', backgroundColor: BLU_LIGHT, paddingHorizontal: 20, paddingVertical: 10, borderRadius: 20 }, {
 					transform: [{
@@ -399,7 +400,9 @@ class Main extends Component {
 		};
 
 		const { navigation } = this.props;
-		this.data = navigation.getParam('moneyData', null);
+		this.data = navigation.getParam('moneyData', null).expenses;
+		this.shopping = navigation.getParam('moneyData', null).shopping;
+		this.code = navigation.getParam('code', null);
 		this.markedDates = {}
 		Object.keys(this.data).map((day, i) => {
 			this.markedDates[day] = { marked: true }
@@ -776,12 +779,16 @@ class Main extends Component {
 					<View style={{ position: 'absolute', top: 0, left: 0, height: height, width: width, backgroundColor: 'black', opacity: 1 }}></View>
 				} size={40} buttonColor={BLU_LIGHT}>
 				</ActionButton>
+				<ActionButton onPress={() => { this.props.navigation.navigate('ShoppingList', { shopping: this.shopping, code: this.code }) }} renderIcon={(active) => {
+					return <Icon color={'white'} size={15} name="tasks" />
+				}} offsetY={15} offsetX={70} spacing={15} verticalOrientation="down" position="right" spacing={15} fixNativeFeedbackRadius={true} position="right" size={40} buttonColor={BLU_LIGHT}>
+				</ActionButton>
 				{this._shouldRenderActionButton()}
 			</View >
-		);
+		)
 	}
 
-};
+}
 
 class History extends Component {
 	constructor(props) {
@@ -863,6 +870,154 @@ class History extends Component {
 					</View>
 					{this._renderHistory()}
 				</View>
+			</View>
+		)
+	}
+}
+
+class ShoppingList extends Component {
+	constructor(props) {
+		super(props)
+		this.state = { refresh: false, extraItemText: "" }
+
+		this.code = this.props.navigation.getParam('code', null)
+		console.log("Shopping", this.code)
+	}
+
+	componentDidMount() {
+
+		this.fetchData().then((shoppingList) => { this.shoppingList = shoppingList; this.forceUpdate(); }).catch((error) => console.log("error", error))
+
+
+	}
+
+	pushData = async (ref, value) => {
+		console.log(ref)
+		let snapshot = await firebase.database().ref(ref).set(value)
+	}
+
+	updateData = async (ref, value) => {
+		console.log(ref)
+		let snapshot = await firebase.database().ref(ref).update(value)
+	}
+
+	fetchData = async () => {
+		try {
+			let snapshot = await firebase.database().ref(`/${this.code}/shopping`).once('value');
+			return snapshot.val();
+		}
+		catch (error) {
+			return error
+		}
+	}
+
+	checkbox = ({ state, title, index }) => {
+
+		const [active, setActive] = useState(state);
+		const [animated, setAnimated] = useState(new Animated.Value(0));
+
+		useEffect(() => {
+			//To account for a bug that would persist the state of the checkbox even after deletion
+			setActive(this.shoppingList[index].active)
+		});
+
+		let interpolatedValue = animated.interpolate({
+			inputRange: [0, 1],
+			outputRange: [40, -20]
+		})
+
+		let animation = Animated.spring(animated, {
+			toValue: 1,
+			duration: 200,
+			friction: 8,
+			tension: 50,
+			useNativeDriver: true
+		})
+
+		let reverseAnimation = Animated.spring(animated, {
+			toValue: 0,
+			duration: 200,
+			friction: 8,
+			tension: 50,
+			useNativeDriver: true
+		})
+
+		return (
+			<View style={{ flexDirection: 'row' }}>
+				<View key={index} style={{ flexDirection: 'row', marginHorizontal: 20, flex: 1, alignItems: 'center' }}>
+					<TouchableNativeFeedback onPress={(event) => {
+						setActive(!active);
+						this.shoppingList[index].active = !active;
+
+						this.updateData(`/${this.code}/shopping/${index}/`, { active: !active })
+					}}>
+						<View style={{ height: 30, width: 30, borderWidth: 1, borderColor: BLU_LIGHT, borderRadius: 20, backgroundColor: active ? BLU_LIGHT : BLU }}></View>
+					</TouchableNativeFeedback>
+					<TouchableNativeFeedback onPress={() => { animation.start(); setTimeout(() => { reverseAnimation.start() }, 3000) }}>
+						<Text style={{ flex: 1, color: 'white', textAlign: 'left', fontSize: 20, marginHorizontal: 20 }}> {title} </Text>
+					</TouchableNativeFeedback>
+				</View>
+				<Animated.View style={{ transform: [{ translateX: interpolatedValue }], alignItems: 'center', justifyContent: 'center', height: 30, width: 30, borderRadius: 15, backgroundColor: '#AA3C3B' }}>
+					<TouchableNativeFeedback onPress={() => {
+						console.log(`${index} should be deleted`); this.shoppingList.splice(index, 1);
+						this.setState({ refresh: !this.state.refresh });
+
+						this.pushData(`/${this.code}/shopping/`, this.shoppingList)
+					}}>
+						<Icon color={'white'} size={20} name="times-circle" />
+					</TouchableNativeFeedback>
+				</Animated.View>
+			</View>
+		)
+	}
+
+	_renderShoppingList = (shoppingList) => {
+		if (shoppingList === null)
+			return null
+
+
+		return (
+			<FlatList
+				data={shoppingList}
+				extraData={this.shoppingList}
+				renderItem={({ item, index, separators }) => { return (<this.checkbox index={index} title={item.title} state={item.active} />) }}
+				ItemSeparatorComponent={() => <View style={{ height: 0.4, marginVertical: 5 }} />}
+			/>
+		)
+	}
+
+	render() {
+		return (
+			<View style={{ flex: 1, flexDirection: 'column', backgroundColor: BLU }}>
+				<Text style={{ color: 'white', fontSize: 45, margin: 20 }}>Shopping List</Text>
+				{this._renderShoppingList(this.shoppingList)}
+				<View style={{ flex: 1 }} />
+				<View style={{ flexDirection: 'row', margin: 10, justifyContent: 'space-between' }}>
+					<TextInput style={{ flex: 1, backgroundColor: 'white', borderRadius: 10 }} placeholder={"New Item"} value={this.state.extraItemText} onChangeText={(text) => this.setState({ extraItemText: text })} />
+					<ActionButton onPress={() => {
+						if (this.state.extraItemText.length === 0) return;
+						this.shoppingList = this.shoppingList || []
+						this.shoppingList.push({ title: this.state.extraItemText, active: false });
+						this.setState({ refresh: !this.state.refresh, extraItemText: "" });
+						this.pushData(`/${this.code}/shopping/`, this.shoppingList)
+						console.log(this.shoppingList)
+					}}
+						renderIcon={(active) => {
+							return <Icon color={'white'} size={15} name="plus" />
+						}}
+						spacing={15} offsetX={10} offsetY={5} fixNativeFeedbackRadius={true} size={40} buttonColor={BLU_LIGHT}>
+					</ActionButton>
+				</View>
+				<ActionButton onPress={() => {
+					this.shoppingList = []
+					this.setState({ refresh: !this.state.refresh });
+					this.pushData(`/${this.code}/shopping/`, this.shoppingList)
+				}}
+					renderIcon={(active) => {
+						return <Icon color={'white'} size={20} name="trash-alt" />
+					}}
+					verticalOrientation="down" position="right" spacing={15} offsetX={20} offsetY={30} fixNativeFeedbackRadius={true} size={45} buttonColor={'#AA3C3B'}>
+				</ActionButton>
 			</View>
 		)
 	}
@@ -955,7 +1110,8 @@ const AppNavigator = FluidNavigator(
 		Splash: { screen: Splash },
 		Currency: { screen: Currency },
 		Main: { screen: Main },
-		History: { screen: History }
+		History: { screen: History },
+		ShoppingList: { screen: ShoppingList }
 	}, {
 	initialRouteName: 'Splash'
 }
