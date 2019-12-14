@@ -171,7 +171,7 @@ class Splash extends Component {
 			.then((value) => this._retrieveData()
 				.then(value => {
 					console.log("Retrieve data success", value)
-					this.props.navigation.navigate('Main', { moneyData: value, code: this.state.storedCode })
+					this.props.navigation.navigate('Main', { moneyData: value, code: this.state.storedCode, currency: this.state.settings })
 				})
 				.catch(error => console.log("Retrieve data error", error)))
 			.catch((error) => this.props.navigation.navigate('Currency'))
@@ -184,7 +184,7 @@ class Splash extends Component {
 			.then((velue) => this._retrieveData()
 				.then(value => {
 					console.log("Retrieve data success", value)
-					this.props.navigation.navigate('Main', { moneyData: value, code: this.state.storedCode })
+					this.props.navigation.navigate('Main', { moneyData: value, code: this.state.storedCode, currency: this.state.settings })
 				})
 			)
 	}
@@ -348,7 +348,7 @@ class ListItem extends Component {
 	}
 
 	render() {
-		const { item, history, onUpdated, index } = this.props
+		const { item, history, onUpdated, index, currency } = this.props
 
 		const rowStyles = [
 			{
@@ -372,7 +372,7 @@ class ListItem extends Component {
 		return (
 			<TouchableOpacity onPress={() => { this.props.onPress() }} onLongPress={(event) => {
 				const { navigate } = this.props.navigation;
-				navigate('History', { cat: item.key, history: history, amount: item.amount, onUpdated: onUpdated })
+				navigate('History', { cat: item.key, history: history, amount: item.amount, onUpdated: onUpdated, currency: currency })
 			}}>
 				<Animated.View style={rowStyles}>
 					<Transition shared={CATEGORIES[item.key].ICON}>
@@ -380,7 +380,7 @@ class ListItem extends Component {
 							<Icon size={28} color={'white'} name={CATEGORIES[item.key].ICON} />
 						</View>
 					</Transition>
-					<Text style={{ fontSize: 16, marginTop: 5, color: 'white' }}>{applyMoneyMask(item.amount)} ISK</Text>
+					<Text style={{ fontSize: 16, marginTop: 5, color: 'white' }}>{applyMoneyMask(item.amount)} {currency}</Text>
 				</Animated.View>
 			</TouchableOpacity>
 		)
@@ -403,6 +403,7 @@ class Main extends Component {
 		this.data = navigation.getParam('moneyData', null).expenses;
 		this.shopping = navigation.getParam('moneyData', null).shopping;
 		this.code = navigation.getParam('code', null);
+		this.currency = navigation.getParam('currency', null);
 		this.markedDates = {}
 		Object.keys(this.data).map((day, i) => {
 			this.markedDates[day] = { marked: true }
@@ -423,6 +424,20 @@ class Main extends Component {
 	}
 
 	componentDidMount() {
+
+			// try {
+			// 	const value = AsyncStorage.getItem('@AccountCode:settings3');
+			// 	console.log("Settings", value)
+	
+			// 	if (value === null)
+			// 		return Promise.reject(new Error("No data"))
+	
+			// 	this.currency = value
+			// } catch (error) {
+			// 	// Error retrieving data
+			// 	return error
+			// }
+
 		this.backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
 
 			if (this.props.navigation.isFocused()) {
@@ -617,11 +632,11 @@ class Main extends Component {
 					}}>
 						<Icon style={{ marginVertical: 5 }} size={30} color={CATEGORIES[label].COLOR} name={CATEGORIES[label].ICON} />
 						<Text style={{ color: CATEGORIES[label].COLOR, marginTop: 5 }}>{CATEGORIES[label].NAME}</Text>
-						<Text style={{ color: CATEGORIES[label].COLOR }}>{value} ISK</Text>
+						<Text style={{ color: CATEGORIES[label].COLOR }}>{value} {this.currency}</Text>
 					</View>
 				</View>
 				<Text style={{ textAlign: 'center', fontWeight: 'bold', fontSize: 17, color: 'white', borderBottomLeftRadius: 10, borderBottomRightRadius: 10, backgroundColor: BLU, justifyContent: 'center', alignItems: 'center', paddingVertical: 10 }}>
-					Total: ${applyMoneyMask(total)}
+					Total: {applyMoneyMask(total)} {this.currency}
 				</Text>
 			</Modal>
 		)
@@ -654,7 +669,7 @@ class Main extends Component {
 			}
 
 			return (
-				<Text style={{ color: 'white', fontWeight: 'bold', fontSize: 17 }}> Day Total: {applyMoneyMask(dailyExpensesSum)} ISK</Text>
+				<Text style={{ color: 'white', fontWeight: 'bold', fontSize: 17 }}> Day Total: {applyMoneyMask(dailyExpensesSum)} {this.currency}</Text>
 			)
 		}
 
@@ -715,6 +730,7 @@ class Main extends Component {
 							<ListItem item={item} index={index}
 								onPress={() => { this.categoryButtonPressed(item.key) }}
 								navigation={this.props.navigation}
+								currency={this.currency}
 								history={this.data[this.state.selectedDay].history[item.key]}
 								onUpdated={this.onUpdated} />)
 						} />
@@ -737,7 +753,7 @@ class Main extends Component {
 						<Text style={{ fontSize: 15, marginTop: 5 }}> How much did you spend? </Text>
 						<View style={{ alignItems: 'center', flexDirection: 'row' }}>
 							<TextInput onSubmitEditing={Keyboard.dismiss} placeholder={"Amount"} value={this.state.amount} onChangeText={(text) => this.setState({ amount: text })} keyboardType={'numeric'} style={{ flex: 1, marginVertical: 0, borderBottomWidth: 2, borderColor: this.getCategoryColor(this.state.catSelected) }} />
-							<Text> ISK </Text>
+							<Text> {this.currency} </Text>
 						</View>
 						<View style={{ flex: 1 }} />
 						<Button onPress={() => {
@@ -801,6 +817,7 @@ class History extends Component {
 
 		this.history = navigation.getParam('history', null)
 		this.amount = this.props.navigation.getParam('amount', null)
+		this.currency = this.props.navigation.getParam('currency', null)
 
 		this._animated = new Animated.Value(0)
 
@@ -836,7 +853,7 @@ class History extends Component {
 						this.amount);
 				}}>
 					<View style={{ flexDirection: 'row', marginHorizontal: 10, backgroundColor: "" }}>
-						<Text style={{ fontSize: 20, color: 'black' }}>{applyMoneyMask(item.amount)} ISK</Text>
+						<Text style={{ fontSize: 20, color: 'black' }}>{applyMoneyMask(item.amount)} {this.currency}</Text>
 						<View style={{ flex: 1 }} />
 						<Text style={{ fontSize: 15 }}>{new Date(item.date).toLocaleTimeString()}</Text>
 					</View>
