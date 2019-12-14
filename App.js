@@ -223,7 +223,7 @@ class Splash extends Component {
 				{/* <Text style={{ color: 'black', fontSize: 25, color:  'white' }}> LOADING...</Text> */}
 				<View style={{ alignItems: 'center', justifyContent: 'center', }}>
 					<View style={{ width: 160, height: 160, borderRadius: 40, borderColor: 'white', borderWidth: 7, alignItems: 'center', justifyContent: 'center' }}>
-						<Icon size={80} color={'white'} name={'money-bill-alt'} />
+						<Image style={{width: 150, height: 150, borderRadius: 40}} source={require('./img/logo.png')}/>
 					</View>
 					<Text style={{ color: 'white', fontSize: 25, fontWeight: 'bold', fontFamily: 'Roboto', marginTop: 10 }}> Spendless</Text>
 				</View>
