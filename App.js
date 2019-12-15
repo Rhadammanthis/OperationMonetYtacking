@@ -114,12 +114,30 @@ class Splash extends Component {
 
 	_retrieveData = async () => {
 		try {
-			const code = await AsyncStorage.getItem('@AccountCode:key24');
+			var code = await AsyncStorage.getItem('@AccountCode:key24');
+			
+
+			console.log("Code",code)
+			console.log("State Code",this.state.code)
+
+			if (code === null)
+				if (this.state.code === '' || this.state.code === null){
+					this.setState({ storedCode: code })
+					return Promise.reject(new Error("No code available"))
+				}
+				else
+					code = this.state.code
+			
 			this.setState({ storedCode: code })
-			console.log("Code", code)
 
 			try {
 				let snapshot = await firebase.database().ref(`/${code}/`).once('value');
+
+				console.log(snapshot.val())
+
+				if (snapshot.val() === null)
+					return Promise.reject(new Error("No data available using that code"))
+
 				return snapshot.val();
 			}
 			catch (error) {
@@ -179,14 +197,15 @@ class Splash extends Component {
 	}
 
 	onSubmit = (code) => {
-		this.setState({ storedCode: code })
-		this._storeData(code)
-			.then((velue) => this._retrieveData()
-				.then(value => {
-					console.log("Retrieve data success", value)
-					this.props.navigation.navigate('Main', { moneyData: value, code: this.state.storedCode, currency: this.state.settings })
-				})
-			)
+		this.setState({ storedCode: code }, () => { 
+			this._retrieveData()
+				.then((moneyData) => this._storeData(code)
+					.then(value => {
+						console.log("Retrieve data success", moneyData)
+						this.props.navigation.navigate('Main', { moneyData: moneyData, code: this.state.storedCode, currency: this.state.settings })
+					})
+				)
+		})
 	}
 
 	_renderForm = () => {
@@ -196,8 +215,14 @@ class Splash extends Component {
 				<View style={{ flexDirection: 'row', marginTop: 20 }}>
 					<View style={{ flex: 1 }} />
 					<View style={{ flex: 3 }}>
-						<TextInput onSubmitEditing={this.onSubmit.bind(this, this.state.code)} onChangeText={(text) => this.setState({ code: text })} style={{ backgroundColor: 'white', borderRadius: 10, marginVertical: 10 }} value={this.state.code} placeholder={'Account Code'}></TextInput>
-						<Button onPress={this.onSubmit.bind(this, this.state.code)} style={{ marginHorizontal: 50 }} title={'Submit'} />
+						<TextInput onSubmitEditing={this.onSubmit.bind(this, this.state.code)} onChangeText={(text) => this.setState({ code: text })} style={{ backgroundColor: 'white', borderRadius: 10, marginVertical: 10 }} keyboardType={'numeric'} value={this.state.code} placeholder={'Account Code'}></TextInput>
+						<TouchableNativeFeedback onPress={this.onSubmit.bind(this, this.state.code)}
+							style={{ borderRadius: 20 }}>
+							<View style={{ alignItems: 'center', justifyContent: 'center', backgroundColor: BLU_LIGHT, paddingHorizontal: 20, paddingVertical: 10, borderRadius: 20 }}>
+								<Text style={{ color: 'white' }}> SUBMIT </Text>
+							</View>
+						</TouchableNativeFeedback>
+						{/* <Button onPress={this.onSubmit.bind(this, this.state.code)} style={{ marginHorizontal: 50 }} title={'Submit'} /> */}
 					</View>
 					<View style={{ flex: 1 }} />
 				</View>
@@ -223,7 +248,7 @@ class Splash extends Component {
 				{/* <Text style={{ color: 'black', fontSize: 25, color:  'white' }}> LOADING...</Text> */}
 				<View style={{ alignItems: 'center', justifyContent: 'center', }}>
 					<View style={{ width: 160, height: 160, borderRadius: 40, borderColor: 'white', borderWidth: 7, alignItems: 'center', justifyContent: 'center' }}>
-						<Image style={{width: 150, height: 150, borderRadius: 40}} source={require('./img/logo.png')}/>
+						<Image style={{ width: 150, height: 150, borderRadius: 40 }} source={require('./img/logo.png')} />
 					</View>
 					<Text style={{ color: 'white', fontSize: 25, fontWeight: 'bold', fontFamily: 'Roboto', marginTop: 10 }}> Spendless</Text>
 				</View>
@@ -425,18 +450,18 @@ class Main extends Component {
 
 	componentDidMount() {
 
-			// try {
-			// 	const value = AsyncStorage.getItem('@AccountCode:settings3');
-			// 	console.log("Settings", value)
-	
-			// 	if (value === null)
-			// 		return Promise.reject(new Error("No data"))
-	
-			// 	this.currency = value
-			// } catch (error) {
-			// 	// Error retrieving data
-			// 	return error
-			// }
+		// try {
+		// 	const value = AsyncStorage.getItem('@AccountCode:settings3');
+		// 	console.log("Settings", value)
+
+		// 	if (value === null)
+		// 		return Promise.reject(new Error("No data"))
+
+		// 	this.currency = value
+		// } catch (error) {
+		// 	// Error retrieving data
+		// 	return error
+		// }
 
 		this.backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
 
