@@ -115,19 +115,19 @@ class Splash extends Component {
 	_retrieveData = async () => {
 		try {
 			var code = await AsyncStorage.getItem('@AccountCode:key24');
-			
 
-			console.log("Code",code)
-			console.log("State Code",this.state.code)
+
+			console.log("Code", code)
+			console.log("State Code", this.state.code)
 
 			if (code === null)
-				if (this.state.code === '' || this.state.code === null){
+				if (this.state.code === '' || this.state.code === null) {
 					this.setState({ storedCode: code })
 					return Promise.reject(new Error("No code available"))
 				}
 				else
 					code = this.state.code
-			
+
 			this.setState({ storedCode: code })
 
 			try {
@@ -197,7 +197,7 @@ class Splash extends Component {
 	}
 
 	onSubmit = (code) => {
-		this.setState({ storedCode: code }, () => { 
+		this.setState({ storedCode: code }, () => {
 			this._retrieveData()
 				.then((moneyData) => this._storeData(code)
 					.then(value => {
@@ -612,11 +612,13 @@ class Main extends Component {
 			})
 		})
 
+		console.log("TOTALS 2", totals)
+
 		//To prevent excessive state updates
-		if (this.state.selectedSlice.value === 0)
+		if (this.state.showSummary === true && this.state.selectedSlice.value === 0)
 			this.setState({ selectedSlice: { value: applyMoneyMask(totals.vgt), label: 'vgt' } })
 
-		const { labelWidth, selectedSlice } = this.state;
+		const { selectedSlice } = this.state;
 		const { label, value } = selectedSlice;
 
 		const data = Object.keys(totals).map((key, index) => {
@@ -633,34 +635,49 @@ class Main extends Component {
 			}
 		})
 
+		_renderPieChart = () => {
+
+			return (
+				total > 0 ?
+					<View style={{ justifyContent: 'center', flex: 1 }}>
+						<PieChart
+							style={{ height: height * 0.45 }}
+							outerRadius={'85%'}
+							innerRadius={'55%'}
+							data={data}
+						/>
+						<View style={{
+							left: (350 / 2 - (width * 0.150)), position: 'absolute', width: width * 0.3, height: width * 0.3,
+							borderRadius: width * 0.150, borderWidth: 3, borderColor: CATEGORIES[label].COLOR, backgroundColor: "#FFFFFFEE",
+							padding: 5, alignItems: 'center', justifyContent: 'center'
+						}}>
+							<Icon style={{ marginVertical: 5 }} size={30} color={CATEGORIES[label].COLOR} name={CATEGORIES[label].ICON} />
+							<Text style={{ color: CATEGORIES[label].COLOR, marginTop: 5 }}>{CATEGORIES[label].NAME}</Text>
+							<Text style={{ color: CATEGORIES[label].COLOR }}>{value} {this.currency}</Text>
+						</View>
+					</View> 
+					: 
+					<Text style={{ color: "black", textAlign: 'center', color: 'white', fontSize: 17 }}> NO DATA AVAILABLE </Text>
+			)
+
+		}
+
 		return (
 			<Modal style={{
 				height: height * 0.6,
 				width: 350,
 				borderRadius: 10,
-			}} onClosed={() => { this.setState({ showSummary: false }) }} position={"center"} ref={"modal3"} isOpen={this.state.showSummary}
+				backgroundColor: BLU
+			}} onClosed={() => { this.setState({ showSummary: false, selectedSlice: { label: 'vgt', value: 0 } }) }}
+				position={"center"} ref={"modal3"} isOpen={this.state.showSummary}
 				animationDuration={350} swipeToClose={false}>
-				<Text style={{ textAlign: 'left', paddingLeft: 10, fontSize: 20, color: 'black', paddingVertical: 10 }}>
+				<Text style={{ textAlign: 'center', paddingLeft: 10, fontSize: 25, color: 'white', paddingVertical: 10 }}>
 					Month's Summary
 				</Text>
 				<View style={{ justifyContent: 'center', flex: 1 }}>
-					<PieChart
-						style={{ height: height * 0.45 }}
-						outerRadius={'85%'}
-						innerRadius={'55%'}
-						data={data}
-					/>
-					<View style={{
-						left: (350 / 2 - (width * 0.150)), position: 'absolute', width: width * 0.3, height: width * 0.3,
-						borderRadius: width * 0.150, borderWidth: 3, borderColor: CATEGORIES[label].COLOR, backgroundColor: 'white',
-						padding: 5, alignItems: 'center', justifyContent: 'center'
-					}}>
-						<Icon style={{ marginVertical: 5 }} size={30} color={CATEGORIES[label].COLOR} name={CATEGORIES[label].ICON} />
-						<Text style={{ color: CATEGORIES[label].COLOR, marginTop: 5 }}>{CATEGORIES[label].NAME}</Text>
-						<Text style={{ color: CATEGORIES[label].COLOR }}>{value} {this.currency}</Text>
-					</View>
+					{_renderPieChart()}
 				</View>
-				<Text style={{ textAlign: 'center', fontWeight: 'bold', fontSize: 17, color: 'white', borderBottomLeftRadius: 10, borderBottomRightRadius: 10, backgroundColor: BLU, justifyContent: 'center', alignItems: 'center', paddingVertical: 10 }}>
+				<Text style={{ textAlign: 'center', fontWeight: 'bold', fontSize: 20, color: 'white', borderBottomLeftRadius: 10, borderBottomRightRadius: 10, backgroundColor: BLU, justifyContent: 'center', alignItems: 'center', paddingVertical: 10 }}>
 					Total: {applyMoneyMask(total)} {this.currency}
 				</Text>
 			</Modal>
