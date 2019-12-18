@@ -39,7 +39,7 @@ import { FlatGrid } from 'react-native-super-grid';
 import * as Progress from 'react-native-progress';
 import { PieChart } from 'react-native-svg-charts'
 import * as Data from './data/data'
-import { thisExpression } from '@babel/types';
+import Carousel from '@rhysforyou/react-native-carousel'
 
 
 /**
@@ -189,7 +189,7 @@ class Splash extends Component {
 			.then((value) => this._retrieveData()
 				.then(value => {
 					console.log("Retrieve data success", value)
-					this.props.navigation.navigate('Main', { moneyData: value, code: this.state.storedCode, currency: this.state.settings })
+					this.props.navigation.navigate('Tutorial', { moneyData: value, code: this.state.storedCode, currency: this.state.settings })
 				})
 				.catch(error => console.log("Retrieve data error", error)))
 			.catch((error) => this.props.navigation.navigate('Currency'))
@@ -202,7 +202,7 @@ class Splash extends Component {
 				.then((moneyData) => this._storeData(code)
 					.then(value => {
 						console.log("Retrieve data success", moneyData)
-						this.props.navigation.navigate('Main', { moneyData: moneyData, code: this.state.storedCode, currency: this.state.settings })
+						this.props.navigation.navigate('Tutorial', { moneyData: moneyData, code: this.state.storedCode, currency: this.state.settings })
 					})
 				)
 		})
@@ -350,6 +350,68 @@ class Currency extends Component {
 				</View>
 				{this._renderAcceptButton()}
 			</View>
+		)
+	}
+}
+
+class Tutorial extends Component {
+	constructor(props) {
+		super(props)
+
+	}
+
+	componentDidMount() {
+
+
+	}
+
+
+	render() {
+		return (
+				<Carousel
+				style= {{ width: width}}
+					data={[
+						{
+							id: "1",
+							title: "Carousel",
+							description: "A handy component for React Native"
+						},
+						{
+							id: "2",
+							title: "Carousel",
+							description: "A handy component for React Native"
+						},
+						{
+							id: "3",
+							title: "Carousel",
+							description: "A handy component for React Native"
+						},
+						{
+							id: "1",
+							title: "Carousel",
+							description: "A handy component for React Native"
+						},
+						{
+							id: "2",
+							title: "Carousel",
+							description: "A handy component for React Native"
+						},
+						{
+							id: "3",
+							title: "Carousel",
+							description: "A handy component for React Native"
+						}
+						// ...
+					]}
+					renderItem={info => (
+						<View style={{ width: 400}}>
+							<Text style={styles.title}>{info.item.title}</Text>
+							<Text style={styles.description}>{info.item.description}</Text>
+						</View>
+					)}
+					keyExtractor={item => item.id}>
+
+				</Carousel>
 		)
 	}
 }
@@ -655,8 +717,8 @@ class Main extends Component {
 							<Text style={{ color: CATEGORIES[label].COLOR, marginTop: 5 }}>{CATEGORIES[label].NAME}</Text>
 							<Text style={{ color: CATEGORIES[label].COLOR }}>{value} {this.currency}</Text>
 						</View>
-					</View> 
-					: 
+					</View>
+					:
 					<Text style={{ color: "black", textAlign: 'center', color: 'white', fontSize: 17 }}> NO DATA AVAILABLE </Text>
 			)
 
@@ -1168,6 +1230,7 @@ const AppNavigator = FluidNavigator(
 	{
 		Splash: { screen: Splash },
 		Currency: { screen: Currency },
+		Tutorial: { screen: Tutorial },
 		Main: { screen: Main },
 		History: { screen: History },
 		ShoppingList: { screen: ShoppingList }
