@@ -368,50 +368,48 @@ class Tutorial extends Component {
 
 	render() {
 		return (
+			<View style={{backgroundColor: BLU, flex: 1, justifyContent: "center", alignItems: "center"}}>
+				<Text style={{ textAlign: 'center', color: 'white', fontSize: 30, marginVertical: 20}}>
+					Welcome to Spendless
+				</Text>
 				<Carousel
-				style= {{ width: width}}
+				style= {{ backgroundColor: BLU}}
 					data={[
 						{
 							id: "1",
-							title: "Carousel",
-							description: "A handy component for React Native"
+							title: "A Clear And Simple Interface!",
+							description: "Select any given week day and start tracking your expenses!",
+							image: require("./img/screen_grab_1_smol.png")
 						},
 						{
 							id: "2",
-							title: "Carousel",
-							description: "A handy component for React Native"
+							title: "Log In Your Daily Expenses",
+							description: "Select a category and and log in how much did you spend! The data is synced with the on-line database and shared accross your devices",
+							image: require("./img/screen_grab_2_smol.png")
 						},
 						{
-							id: "3",
-							title: "Carousel",
-							description: "A handy component for React Native"
+							id: "3 ",
+							title: "Check Your Monthly Summary",
+							description: "Track your expenses and see where most of your money is going to. Maybe you'll actually need to cut down on veggies after all",
+							image: require("./img/screen_grab_3_smol.png")
 						},
 						{
-							id: "1",
-							title: "Carousel",
-							description: "A handy component for React Native"
+							id: "4",
+							title: "Create An On-Demand Shopping List",
+							description: "Never hava that \"oh no, I forgot to buy eggs again...\" moment again. The shopping-list's items are synced acroos your devices as well! ",
+							image: require("./img/screen_grab_4_smol.png")
 						},
-						{
-							id: "2",
-							title: "Carousel",
-							description: "A handy component for React Native"
-						},
-						{
-							id: "3",
-							title: "Carousel",
-							description: "A handy component for React Native"
-						}
-						// ...
 					]}
 					renderItem={info => (
-						<View style={{ width: 400}}>
-							<Text style={styles.title}>{info.item.title}</Text>
-							<Text style={styles.description}>{info.item.description}</Text>
+						<View style={{flex: 1}}>
+							<Text style={{color: '#000000DD', textAlign: "center", fontSize: 20}}>{info.item.title}</Text>
+							<Text style={{color: '#000000DD', textAlign: "center", fontSize: 17, marginVertical: 5}}>{info.item.description}</Text>
+							<Image  style={{ flex: 1,  aspectRatio: 0.5, alignSelf:"center" }} source={info.item.image}/>
 						</View>
 					)}
 					keyExtractor={item => item.id}>
-
 				</Carousel>
+			</View>
 		)
 	}
 }
