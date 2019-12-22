@@ -28,7 +28,7 @@ import {
 	DebugInstructions,
 	ReloadInstructions,
 } from 'react-native/Libraries/NewAppScreen';
-import { createStackNavigator, createAppContainer } from "react-navigation";
+import { StackActions, createAppContainer } from "react-navigation";
 // import ActionButton from 'react-native-circular-action-menu';
 import ActionButton from 'react-native-action-button';
 import Icon from 'react-native-vector-icons/FontAwesome5';
@@ -189,22 +189,27 @@ class Splash extends Component {
 			.then((value) => this._retrieveData()
 				.then(value => {
 					console.log("Retrieve data success", value)
-					this.props.navigation.navigate('Tutorial', { moneyData: value, code: this.state.storedCode, currency: this.state.settings })
+					this.props.navigation.navigate('Main', { moneyData: value, code: this.state.storedCode, currency: this.state.settings })
 				})
 				.catch(error => console.log("Retrieve data error", error)))
-			.catch((error) => this.props.navigation.navigate('Currency'))
+			.catch((error) => this.props.navigation.navigate('Tutorial'))
 
 	}
 
 	onSubmit = (code) => {
 		this.setState({ storedCode: code }, () => {
-			this._retrieveData()
-				.then((moneyData) => this._storeData(code)
-					.then(value => {
-						console.log("Retrieve data success", moneyData)
-						this.props.navigation.navigate('Tutorial', { moneyData: moneyData, code: this.state.storedCode, currency: this.state.settings })
-					})
-				)
+			this._retrieveSettings().then(
+				(value) => {
+
+					this._retrieveData()
+						.then((moneyData) => this._storeData(code)
+							.then(value => {
+								console.log("Retrieve data success SUBMIT1", moneyData)
+								this.props.navigation.navigate('Main', { moneyData: moneyData, code: this.state.storedCode, currency: this.state.settings })
+							})
+						)
+				}
+			)
 		})
 	}
 
@@ -316,7 +321,7 @@ class Currency extends Component {
 		return (
 			<TouchableNativeFeedback onPress={(evnt) => {
 				this._storeData(selectedCountry)
-					.then((value) => { console.log(value); this.props.navigation.goBack() })
+					.then((value) => { console.log(value); this.props.navigation.dispatch(StackActions.popToTop()) })
 					.catch((error) => { console.log(error) })
 			}}
 				style={{ borderRadius: 20 }}>
@@ -357,7 +362,7 @@ class Currency extends Component {
 class Tutorial extends Component {
 	constructor(props) {
 		super(props)
-
+		this.state = { animCloseButton: new Animated.Value(0) }
 	}
 
 	componentDidMount() {
@@ -365,15 +370,47 @@ class Tutorial extends Component {
 
 	}
 
+	_renderAcceptButton = () => {
+		const { animCloseButton, selectedCountry } = this.state
+
+		return (
+			<TouchableNativeFeedback onPress={(evnt) => {
+				this.props.navigation.navigate('Currency')
+			}}
+				style={{ borderRadius: 20 }}>
+				<Animated.View style={[{ alignItems: 'center', justifyContent: 'center', backgroundColor: BLU_LIGHT, paddingHorizontal: 20, paddingVertical: 10, borderRadius: 20 }, {
+					transform: [{
+						translateY: animCloseButton.interpolate({
+							inputRange: [0, 1],
+							outputRange: [100, -10]
+						})
+					}]
+				}]}>
+					<Text style={{ color: 'white' }}> GOT IT! </Text>
+				</Animated.View>
+			</TouchableNativeFeedback>
+		)
+	}
+
 
 	render() {
+
+		const springAnimation = Animated.spring(this.state.animCloseButton, {
+			toValue: 1,
+			duration: 200,
+			friction: 8,
+			tension: 50,
+			useNativeDriver: true
+		})
+
 		return (
-			<View style={{backgroundColor: BLU, flex: 1, justifyContent: "center", alignItems: "center"}}>
-				<Text style={{ textAlign: 'center', color: 'white', fontSize: 30, marginVertical: 20}}>
+			<View style={{ backgroundColor: BLU, flex: 1, justifyContent: "center", alignItems: "center" }}>
+				<Text style={{ textAlign: 'center', color: 'white', fontSize: 30, marginVertical: 20 }}>
 					Welcome to Spendless
 				</Text>
 				<Carousel
-				style= {{ backgroundColor: BLU}}
+					style={{ backgroundColor: BLU }}
+					onEndReached={(distanceFromEnd) => { console.log("THE END"); springAnimation.start() }}
 					data={[
 						{
 							id: "1",
@@ -401,14 +438,15 @@ class Tutorial extends Component {
 						},
 					]}
 					renderItem={info => (
-						<View style={{flex: 1}}>
-							<Text style={{color: '#000000DD', textAlign: "center", fontSize: 20}}>{info.item.title}</Text>
-							<Text style={{color: '#000000DD', textAlign: "center", fontSize: 17, marginVertical: 5}}>{info.item.description}</Text>
-							<Image  style={{ flex: 1,  aspectRatio: 0.5, alignSelf:"center" }} source={info.item.image}/>
+						<View style={{ flex: 1 }}>
+							<Text style={{ color: '#000000DD', textAlign: "center", fontSize: 20 }}>{info.item.title}</Text>
+							<Text style={{ color: '#000000DD', textAlign: "center", fontSize: 17, marginVertical: 5 }}>{info.item.description}</Text>
+							<Image style={{ flex: 1, aspectRatio: 0.5, alignSelf: "center" }} source={info.item.image} />
 						</View>
 					)}
 					keyExtractor={item => item.id}>
 				</Carousel>
+				{this._renderAcceptButton()}
 			</View>
 		)
 	}
@@ -434,6 +472,9 @@ class ListItem extends Component {
 
 	render() {
 		const { item, history, onUpdated, index, currency } = this.props
+
+		console.log("Currency", currency)
+		console.log("Item Amount", item)
 
 		const rowStyles = [
 			{
