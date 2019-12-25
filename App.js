@@ -40,6 +40,7 @@ import * as Progress from 'react-native-progress';
 import { PieChart } from 'react-native-svg-charts'
 import * as Data from './data/data'
 import Carousel from '@rhysforyou/react-native-carousel'
+import { translate} from "./src/translations/" 
 
 
 /**
@@ -367,7 +368,6 @@ class Tutorial extends Component {
 
 	componentDidMount() {
 
-
 	}
 
 	_renderAcceptButton = () => {
@@ -406,7 +406,7 @@ class Tutorial extends Component {
 		return (
 			<View style={{ backgroundColor: BLU, flex: 1, justifyContent: "center", alignItems: "center" }}>
 				<Text style={{ textAlign: 'center', color: 'white', fontSize: 30, marginVertical: 20 }}>
-					Welcome to Spendless
+					{translate("tutorial_header_title")}
 				</Text>
 				<Carousel
 					style={{ backgroundColor: BLU }}
@@ -414,7 +414,7 @@ class Tutorial extends Component {
 					data={[
 						{
 							id: "1",
-							title: "A Clear And Simple Interface!",
+							title: translate("tutorial_card_1_title"),
 							description: "Select any given week day and start tracking your expenses!",
 							image: require("./img/screen_grab_1_smol.png")
 						},
@@ -1274,15 +1274,18 @@ const AppNavigator = FluidNavigator(
 		History: { screen: History },
 		ShoppingList: { screen: ShoppingList }
 	}, {
-	initialRouteName: 'Splash'
+	initialRouteName: 'Tutorial'
 }
 );
 
 let AppContainer = createAppContainer(AppNavigator);
 
-export default () => (
-	<AppContainer onNavigationStateChange={(prevState, newState, action) => {
-		{/* if (action.type === "Navigation/BACK" && newState.index === 0)
+export default () => {
+
+	return (
+		<AppContainer  onNavigationStateChange={(prevState, newState, action) => {
+			{/* if (action.type === "Navigation/BACK" && newState.index === 0)
 			BackHandler.exitApp() */}
-	}} />
-)
+		}} />
+	)
+}
