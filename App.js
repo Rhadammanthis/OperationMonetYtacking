@@ -7,7 +7,7 @@
  */
 
 import React, { Component, useState, useEffect } from 'react';
-import { Calendar, CalendarList, Agenda } from 'react-native-calendars';
+import { LocaleConfig, CalendarList } from 'react-native-calendars';
 import {
 	AsyncStorage,
 	StyleSheet,
@@ -40,6 +40,7 @@ import * as Progress from 'react-native-progress';
 import { PieChart } from 'react-native-svg-charts'
 import * as Data from './data/data'
 import Carousel from '@rhysforyou/react-native-carousel'
+import { translate} from "./src/translations/" 
 
 
 /**
@@ -57,19 +58,19 @@ import Carousel from '@rhysforyou/react-native-carousel'
 var { height, width } = Dimensions.get('window');
 console.log('Height', height)
 
-const calendarDayTextSize = height < 600 ? 14 : 16
+const calendarDayTextSize = height < 600 ? 14 : 15
 const calendarMonthTextSize = height < 600 ? 20 : 30
 const panelOffset = (height * -0.27)
 
 const CATEGORIES = {
-	vgt: { COLOR: '#238364', ICON: "carrot", NAME: 'Vegetables' },
-	fts: { COLOR: '#afc474', ICON: "apple-alt", NAME: 'Fruits' },
-	dry: { COLOR: '#F99D33', ICON: "cheese", NAME: 'Dairy' },
-	mef: { COLOR: '#AA3C3B', ICON: "drumstick-bite", NAME: 'Meet & Fish' },
-	swt: { COLOR: '#CA7E8D', ICON: "ice-cream", NAME: 'Sweets' },
-	crl: { COLOR: '#71503A', ICON: "bread-slice", NAME: 'Cereals' },
-	cln: { COLOR: '#5E96AE', ICON: "toilet-paper", NAME: 'Hygene' },
-	oth: { COLOR: '#909090', ICON: "cash-register", NAME: 'Other' },
+	vgt: { COLOR: '#238364', ICON: "carrot", NAME: translate("main_category_vegetables") },
+	fts: { COLOR: '#afc474', ICON: "apple-alt", NAME: translate("main_category_fruits") },
+	dry: { COLOR: '#F99D33', ICON: "cheese", NAME: translate("main_category_dairy") },
+	mef: { COLOR: '#AA3C3B', ICON: "drumstick-bite", NAME: translate("main_category_meets") },
+	swt: { COLOR: '#CA7E8D', ICON: "ice-cream", NAME: translate("main_category_sweets") },
+	crl: { COLOR: '#71503A', ICON: "bread-slice", NAME: translate("main_category_cereals") },
+	cln: { COLOR: '#5E96AE', ICON: "toilet-paper", NAME: translate("main_category_hygiene") },
+	oth: { COLOR: '#909090', ICON: "cash-register", NAME: translate("main_category_other") },
 }
 
 const BLU = '#005577'
@@ -224,7 +225,7 @@ class Splash extends Component {
 						<TouchableNativeFeedback onPress={this.onSubmit.bind(this, this.state.code)}
 							style={{ borderRadius: 20 }}>
 							<View style={{ alignItems: 'center', justifyContent: 'center', backgroundColor: BLU_LIGHT, paddingHorizontal: 20, paddingVertical: 10, borderRadius: 20 }}>
-								<Text style={{ color: 'white' }}> SUBMIT </Text>
+								<Text style={{ color: 'white' }}> {translate("splash_button")} </Text>
 							</View>
 						</TouchableNativeFeedback>
 						{/* <Button onPress={this.onSubmit.bind(this, this.state.code)} style={{ marginHorizontal: 50 }} title={'Submit'} /> */}
@@ -333,7 +334,7 @@ class Currency extends Component {
 						})
 					}]
 				}]}>
-					<Text style={{ color: 'white' }}> SELECT </Text>
+					<Text style={{ color: 'white' }}> {translate("currency_button")} </Text>
 				</Animated.View>
 			</TouchableNativeFeedback>
 		)
@@ -343,7 +344,7 @@ class Currency extends Component {
 		return (
 			<View style={{ flex: 1, justifyContent: 'center', backgroundColor: BLU, alignItems: 'center' }}>
 				<Text style={{ color: 'white', textAlign: 'center', fontSize: 25, maxWidth: width * 0.75, marginVertical: 25 }}>
-					Select your prefered currency
+					{translate("currency_message")}
 				</Text>
 				<View style={{ height: height * 0.5, backgroundColor: 'white', borderRadius: 10, marginBottom: 15 }}>
 					<FlatList
@@ -367,7 +368,6 @@ class Tutorial extends Component {
 
 	componentDidMount() {
 
-
 	}
 
 	_renderAcceptButton = () => {
@@ -386,7 +386,7 @@ class Tutorial extends Component {
 						})
 					}]
 				}]}>
-					<Text style={{ color: 'white' }}> GOT IT! </Text>
+					<Text style={{ color: 'white' }}> {translate("tutorial_button")} </Text>
 				</Animated.View>
 			</TouchableNativeFeedback>
 		)
@@ -406,7 +406,7 @@ class Tutorial extends Component {
 		return (
 			<View style={{ backgroundColor: BLU, flex: 1, justifyContent: "center", alignItems: "center" }}>
 				<Text style={{ textAlign: 'center', color: 'white', fontSize: 30, marginVertical: 20 }}>
-					Welcome to Spendless
+					{translate("tutorial_header_title")}
 				</Text>
 				<Carousel
 					style={{ backgroundColor: BLU }}
@@ -414,26 +414,26 @@ class Tutorial extends Component {
 					data={[
 						{
 							id: "1",
-							title: "A Clear And Simple Interface!",
-							description: "Select any given week day and start tracking your expenses!",
+							title: translate("tutorial_card_1_title"),
+							description: translate("tutorial_card_1_description"),
 							image: require("./img/screen_grab_1_smol.png")
 						},
 						{
 							id: "2",
-							title: "Log In Your Daily Expenses",
-							description: "Select a category and and log in how much did you spend! The data is synced with the on-line database and shared accross your devices",
+							title: translate("tutorial_card_2_title"),
+							description: translate("tutorial_card_2_description"),
 							image: require("./img/screen_grab_2_smol.png")
 						},
 						{
 							id: "3 ",
-							title: "Check Your Monthly Summary",
-							description: "Track your expenses and see where most of your money is going to. Maybe you'll actually need to cut down on veggies after all",
+							title: translate("tutorial_card_3_title"),
+							description: translate("tutorial_card_3_description"),
 							image: require("./img/screen_grab_3_smol.png")
 						},
 						{
 							id: "4",
-							title: "Create An On-Demand Shopping List",
-							description: "Never hava that \"oh no, I forgot to buy eggs again...\" moment again. The shopping-list's items are synced acroos your devices as well! ",
+							title: translate("tutorial_card_4_title"),
+							description: translate("tutorial_card_4_description"),
 							image: require("./img/screen_grab_4_smol.png")
 						},
 					]}
@@ -525,6 +525,19 @@ class Main extends Component {
 			}, labelWidth: 0
 		};
 
+		LocaleConfig.locales['es'] = {
+			monthNames: [translate("system_january"),translate("system_february"),translate("system_march"),translate("system_april"),
+			translate("system_may"),translate("system_june"),translate("system_july"),translate("system_august"),
+			translate("system_september"),translate("system_october"),translate("system_november"),translate("system_december")],
+			monthNamesShort: ['Janv.','Févr.','Mars','Avril','Mai','Juin','Juil.','Août','Sept.','Oct.','Nov.','Déc.'],
+			dayNames: ['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'],
+			dayNamesShort: [translate("system_sunday_short"),translate("system_monday_short"),translate("system_tuesday_short"),
+				translate("system_wednesday_short"),translate("system_thursday_short"),translate("system_friday_short"),translate("system_saturday_short")],
+			today: 'Aujourd\'hui'
+		  };
+
+		  LocaleConfig.defaultLocale = 'es';
+
 		const { navigation } = this.props;
 		this.data = navigation.getParam('moneyData', null).expenses;
 		this.shopping = navigation.getParam('moneyData', null).shopping;
@@ -563,6 +576,9 @@ class Main extends Component {
 		// 	// Error retrieving data
 		// 	return error
 		// }
+
+		
+		  
 
 		this.backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
 
@@ -758,7 +774,7 @@ class Main extends Component {
 						</View>
 					</View>
 					:
-					<Text style={{ color: "black", textAlign: 'center', color: 'white', fontSize: 17 }}> NO DATA AVAILABLE </Text>
+					<Text style={{ color: "black", textAlign: 'center', color: 'white', fontSize: 17 }}> {translate("main_monthly_summary_no_data")} </Text>
 			)
 
 		}
@@ -773,13 +789,13 @@ class Main extends Component {
 				position={"center"} ref={"modal3"} isOpen={this.state.showSummary}
 				animationDuration={350} swipeToClose={false}>
 				<Text style={{ textAlign: 'center', paddingLeft: 10, fontSize: 25, color: 'white', paddingVertical: 10 }}>
-					Month's Summary
+					{translate("main_monthly_summary_title")}
 				</Text>
 				<View style={{ justifyContent: 'center', flex: 1 }}>
 					{_renderPieChart()}
 				</View>
 				<Text style={{ textAlign: 'center', fontWeight: 'bold', fontSize: 20, color: 'white', borderBottomLeftRadius: 10, borderBottomRightRadius: 10, backgroundColor: BLU, justifyContent: 'center', alignItems: 'center', paddingVertical: 10 }}>
-					Total: {applyMoneyMask(total)} {this.currency}
+					{translate("main_monthly_summary_total")} {applyMoneyMask(total)} {this.currency}
 				</Text>
 			</Modal>
 		)
@@ -812,7 +828,7 @@ class Main extends Component {
 			}
 
 			return (
-				<Text style={{ color: 'white', fontWeight: 'bold', fontSize: 17 }}> Day Total: {applyMoneyMask(dailyExpensesSum)} {this.currency}</Text>
+				<Text style={{ color: 'white', fontWeight: 'bold', fontSize: 17 }}> {translate("main_day_total")} {applyMoneyMask(dailyExpensesSum)} {this.currency}</Text>
 			)
 		}
 
@@ -892,10 +908,10 @@ class Main extends Component {
 						<Icon size={70} color={"white"} name={this.getCategoryIcon(this.state.catSelected)} />
 					</View>
 					<View style={{ flex: 1, padding: 10 }}>
-						<Text style={{ fontSize: 20 }}> Add Expense </Text>
-						<Text style={{ fontSize: 15, marginTop: 5 }}> How much did you spend? </Text>
+						<Text style={{ fontSize: 20 }}> {translate("main_add_expense_title")} </Text>
+						<Text style={{ fontSize: 15, marginTop: 5 }}> {translate("main_add_expense_content")} </Text>
 						<View style={{ alignItems: 'center', flexDirection: 'row' }}>
-							<TextInput onSubmitEditing={Keyboard.dismiss} placeholder={"Amount"} value={this.state.amount} onChangeText={(text) => this.setState({ amount: text })} keyboardType={'numeric'} style={{ flex: 1, marginVertical: 0, borderBottomWidth: 2, borderColor: this.getCategoryColor(this.state.catSelected) }} />
+							<TextInput onSubmitEditing={Keyboard.dismiss} placeholder={translate("main_add_expense_hint")} value={this.state.amount} onChangeText={(text) => this.setState({ amount: text })} keyboardType={'numeric'} style={{ flex: 1, marginVertical: 0, borderBottomWidth: 2, borderColor: this.getCategoryColor(this.state.catSelected) }} />
 							<Text> {this.currency} </Text>
 						</View>
 						<View style={{ flex: 1 }} />
@@ -928,7 +944,7 @@ class Main extends Component {
 							padding: 10
 						}}
 							color={this.getCategoryColor(this.state.catSelected)}
-							title="Add" />
+							title={translate("main_add_expense_button")} />
 					</View>
 				</Modal>
 				{this._renderSummaryModal(this.currentMonth)}
@@ -1024,9 +1040,9 @@ class History extends Component {
 
 				<View style={{ marginHorizontal: 10, marginBottom: 10, flex: 1, borderRadius: 20, backgroundColor: 'white' }}>
 					<View style={{ flexDirection: 'row', margin: 10 }}>
-						<Text style={{ fontSize: 25, color: 'black' }}>Amount</Text>
+						<Text style={{ fontSize: 25, color: 'black' }}>{translate("history_amount")}</Text>
 						<View style={{ flex: 1 }} />
-						<Text style={{ fontSize: 25 }}>Time</Text>
+						<Text style={{ fontSize: 25 }}>{translate("history_time")}</Text>
 					</View>
 					{this._renderHistory()}
 				</View>
@@ -1149,11 +1165,11 @@ class ShoppingList extends Component {
 	render() {
 		return (
 			<View style={{ flex: 1, flexDirection: 'column', backgroundColor: BLU }}>
-				<Text style={{ color: 'white', fontSize: 45, margin: 20 }}>Shopping List</Text>
+				<Text allowFontScaling style={{ color: 'white', fontSize: 40, margin: 20, paddingRight: 45 }}>{translate("shopping_list_title")}</Text>
 				{this._renderShoppingList(this.shoppingList)}
 				<View style={{ flex: 1 }} />
 				<View style={{ flexDirection: 'row', margin: 10, justifyContent: 'space-between' }}>
-					<TextInput style={{ flex: 1, backgroundColor: 'white', borderRadius: 10 }} placeholder={"New Item"} value={this.state.extraItemText} onChangeText={(text) => this.setState({ extraItemText: text })} />
+					<TextInput style={{ flex: 1, backgroundColor: 'white', borderRadius: 10 }} placeholder={translate("shopping_list_hint")} value={this.state.extraItemText} onChangeText={(text) => this.setState({ extraItemText: text })} />
 					<ActionButton onPress={() => {
 						if (this.state.extraItemText.length === 0) return;
 						this.shoppingList = this.shoppingList || []
@@ -1280,9 +1296,12 @@ const AppNavigator = FluidNavigator(
 
 let AppContainer = createAppContainer(AppNavigator);
 
-export default () => (
-	<AppContainer onNavigationStateChange={(prevState, newState, action) => {
-		{/* if (action.type === "Navigation/BACK" && newState.index === 0)
+export default () => {
+
+	return (
+		<AppContainer  onNavigationStateChange={(prevState, newState, action) => {
+			{/* if (action.type === "Navigation/BACK" && newState.index === 0)
 			BackHandler.exitApp() */}
-	}} />
-)
+		}} />
+	)
+}
