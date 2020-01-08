@@ -28,7 +28,7 @@ import {
 	DebugInstructions,
 	ReloadInstructions,
 } from 'react-native/Libraries/NewAppScreen';
-import { StackActions, createAppContainer } from "react-navigation";
+import { StackActions, createAppContainer, createStackNavigator } from "react-navigation";
 // import ActionButton from 'react-native-circular-action-menu';
 import ActionButton from 'react-native-action-button';
 import Icon from 'react-native-vector-icons/FontAwesome5';
@@ -40,7 +40,7 @@ import * as Progress from 'react-native-progress';
 import { PieChart } from 'react-native-svg-charts'
 import * as Data from './data/data'
 import Carousel from '@rhysforyou/react-native-carousel'
-import { translate} from "./src/translations/" 
+import { translate } from "./src/translations/"
 
 
 /**
@@ -101,10 +101,11 @@ class Splash extends Component {
 	constructor(props) {
 		super(props)
 		//161943 H&K
-		this.state = { code: "", storedCode: "null", settings: {} }
+		this.state = { code: "", storedCode: null, settings: {} }
 	}
 
 	_storeData = async (code) => {
+		console.log("STORE DATA")
 		try {
 			await AsyncStorage.setItem('@AccountCode:key24', code);
 			console.log("Saved!")
@@ -114,6 +115,7 @@ class Splash extends Component {
 	};
 
 	_retrieveData = async () => {
+		console.log("RETRIEVE DATA")
 		try {
 			var code = await AsyncStorage.getItem('@AccountCode:key24');
 
@@ -123,7 +125,7 @@ class Splash extends Component {
 
 			if (code === null)
 				if (this.state.code === '' || this.state.code === null) {
-					this.setState({ storedCode: code })
+					// this.setState({ storedCode: code })
 					return Promise.reject(new Error("No code available"))
 				}
 				else
@@ -151,6 +153,7 @@ class Splash extends Component {
 	};
 
 	_retrieveSettings = async () => {
+		console.log("RETRIEVE SETTINGS")
 		try {
 			const value = await AsyncStorage.getItem('@AccountCode:settings3');
 			console.log("Settings", value)
@@ -168,23 +171,24 @@ class Splash extends Component {
 
 	componentDidMount() {
 
-		const didBlurSubscription = this.props.navigation.addListener(
-			'didFocus',
-			payload => {
-				console.log('didFocus', payload);
-				const { action } = payload;
+		console.log("MOUNTED")
+		// const didBlurSubscription = this.props.navigation.addListener(
+		// 	'didFocus',
+		// 	payload => {
+		// 		console.log('didFocus', payload);
+		// 		const { action } = payload;
 
-				if (action.type === "Navigation/COMPLETE_TRANSITION") {
-					this._retrieveData()
-						.then(value => {
-							console.log("Retrieve data success", value)
-							// this.props.navigation.navigate('Main', { moneyData: value, code: this.state.storedCode })
+		// 		if (action.type === "Navigation/COMPLETE_TRANSITION") {
+		// 			this._retrieveData()
+		// 				.then(value => {
+		// 					console.log("Retrieve data success", value)
+		// 					// this.props.navigation.navigate('Main', { moneyData: value, code: this.state.storedCode })
 
-						})
-						.catch(error => console.log("Retrieve data error", error))
-				}
-			}
-		);
+		// 				})
+		// 				.catch(error => console.log("Retrieve data error", error))
+		// 		}
+		// 	}
+		// );
 
 		this._retrieveSettings()
 			.then((value) => this._retrieveData()
@@ -214,19 +218,27 @@ class Splash extends Component {
 		})
 	}
 
+	onCodeCreated = (code) => {
+		this.setState({ code: code.toString() })
+	}
+
 	_renderForm = () => {
 
-		if (!this.state.storedCode)
+		if (this.state.storedCode === null)
 			return (
 				<View style={{ flexDirection: 'row', marginTop: 20 }}>
 					<View style={{ flex: 1 }} />
 					<View style={{ flex: 3 }}>
-						<TextInput onSubmitEditing={this.onSubmit.bind(this, this.state.code)} onChangeText={(text) => this.setState({ code: text })} style={{ backgroundColor: 'white', borderRadius: 10, marginVertical: 10 }} keyboardType={'numeric'} value={this.state.code} placeholder={'Account Code'}></TextInput>
+						<TextInput onChangeText={(text) => this.setState({ code: text })} style={{ backgroundColor: 'white', borderRadius: 10, marginVertical: 10 }} keyboardType={'numeric'} value={this.state.code} placeholder={'Account Code'}></TextInput>
+						<TextInput onSubmitEditing={this.onSubmit.bind(this, this.state.code, this.state.password)} onChangeText={(text) => this.setState({ password: text })} style={{ backgroundColor: 'white', borderRadius: 10, marginVertical: 10 }} secureTextEntry={true} value={this.state.password} placeholder={'Password'}></TextInput>
 						<TouchableNativeFeedback onPress={this.onSubmit.bind(this, this.state.code)}
 							style={{ borderRadius: 20 }}>
-							<View style={{ alignItems: 'center', justifyContent: 'center', backgroundColor: BLU_LIGHT, paddingHorizontal: 20, paddingVertical: 10, borderRadius: 20 }}>
+							<View style={{ alignItems: 'center', justifyContent: 'center', backgroundColor: BLU_LIGHT, paddingHorizontal: 20, borderRadius: 20, marginVertical: 10, paddingVertical: 10 }}>
 								<Text style={{ color: 'white' }}> {translate("splash_button")} </Text>
 							</View>
+						</TouchableNativeFeedback>
+						<TouchableNativeFeedback onPress={() => this.props.navigation.navigate('MyModal', { onCodeCreated: this.onCodeCreated })}>
+							<Text style={{ color: BLU_LIGHT, textAlign: "center", marginVertical: 10 }}> Don't have an account? </Text>
 						</TouchableNativeFeedback>
 						{/* <Button onPress={this.onSubmit.bind(this, this.state.code)} style={{ marginHorizontal: 50 }} title={'Submit'} /> */}
 					</View>
@@ -245,13 +257,11 @@ class Splash extends Component {
 				/>
 			</View>
 		)
-
 	}
 
 	render() {
 		return (
 			<View style={{ flex: 1, justifyContent: 'center', backgroundColor: BLU }}>
-				{/* <Text style={{ color: 'black', fontSize: 25, color:  'white' }}> LOADING...</Text> */}
 				<View style={{ alignItems: 'center', justifyContent: 'center', }}>
 					<View style={{ width: 160, height: 160, borderRadius: 40, borderColor: 'white', borderWidth: 7, alignItems: 'center', justifyContent: 'center' }}>
 						<Image style={{ width: 150, height: 150, borderRadius: 40 }} source={require('./img/logo.png')} />
@@ -261,6 +271,103 @@ class Splash extends Component {
 				{this._renderForm()}
 			</View>
 		)
+	}
+}
+
+class ModalScreen extends React.Component {
+	constructor(props) {
+		super(props)
+		//161943 H&K
+		this.state = { email: "", password: "", animError: new Animated.Value(0) }
+
+	}
+
+	animateErrorMessage = (message) => {
+
+		this.setState({ errorMessage: message})
+
+		const forwardsAnimation = Animated.spring(this.state.animError, {
+			toValue: 1,
+			duration: 200,
+			friction: 8,
+			tension: 50,
+			useNativeDriver: true
+		})
+
+		const backwardsAnimation = Animated.spring(this.state.animError, {
+			toValue: 0,
+			duration: 300,
+			friction: 8,
+			tension: 50,
+			useNativeDriver: true
+		})
+	
+		forwardsAnimation.start()
+		setTimeout(() => { backwardsAnimation.start() }, 3000)
+		
+	}
+
+	onSubmit = (email, password) => {
+		
+		if(password !== this.state.repeatPassword){
+			this.animateErrorMessage("Passwords do not match")
+			return
+		}
+		
+		firebase.auth()
+			.createUserWithEmailAndPassword(email, password)
+			.then((value) => { 
+
+				var code = Math.floor(100000 + Math.random() * 900000)
+				var userData = { email: email, dateCreated: new Date().getDate() }
+
+				this.pushData(`/users/${code}/`, userData)
+			})
+			.catch((reason) => { 
+				this.animateErrorMessage(reason.message)
+			})
+	}
+
+	pushData = async (ref, value) => {
+		console.log(ref)
+		let snapshot = await firebase.database().ref(ref).set(value)
+
+		console.log(snapshot.val())
+	}
+
+	render() {
+		const { animError, errorMessage } = this.state
+		return (
+			<View style={{ flex: 1, backgroundColor: BLU, justifyContent: "center", alignItems: "center" }}>
+				<Text style={{ color: "white", textAlign: 'center', fontSize: 30 }}>Create an Account</Text>
+				<View style={{ flexDirection: 'row', marginTop: 20 }}>
+					<View style={{ flex: 1 }} />
+					<View style={{ flex: 3 }}>
+						<Text style={{ color: "white" }}>Email</Text>
+						<TextInput onChangeText={(text) => this.setState({ email: text })} style={{ backgroundColor: 'white', borderRadius: 10, marginVertical: 5 }} keyboardType={'email-address'} value={this.state.email} placeholder={'Email'}></TextInput>
+						<Text style={{ color: "white", marginTop: 10 }}>Password</Text>
+						<TextInput onChangeText={(text) => this.setState({ password: text })} style={{ backgroundColor: 'white', borderRadius: 10, marginVertical: 5 }} secureTextEntry={true} value={this.state.password} placeholder={'Password'}></TextInput>
+						<Text style={{ color: "white", marginTop: 10 }}>Repeat Password</Text>
+						<TextInput onChangeText={(text) => this.setState({ repeatPassword: text })} style={{ backgroundColor: 'white', borderRadius: 10, marginVertical: 5 }} secureTextEntry={true} value={this.state.repeatPassword} placeholder={'Password'}></TextInput>
+						<TouchableNativeFeedback onPress={this.onSubmit.bind(this, this.state.email, this.state.password)}
+							style={{ borderRadius: 20 }}>
+							<View style={{ alignItems: 'center', justifyContent: 'center', backgroundColor: BLU_LIGHT, paddingHorizontal: 20, borderRadius: 20, marginVertical: 20, paddingVertical: 10 }}>
+								<Text style={{ color: 'white' }}> Sign Up </Text>
+							</View>
+						</TouchableNativeFeedback>
+					</View>
+					<View style={{ flex: 1 }} />
+				</View>
+				<Animated.View style={[{  backgroundColor: '#AA3C3B', borderRadius: 20, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', marginHorizontal: width / 6, position: 'absolute', bottom: 0 }, { transform: [{
+						translateY: animError.interpolate({
+							inputRange: [0, 1],
+							outputRange: [150, -50]
+						})
+					}]}]}>
+					<Text style={{color: 'white', textAlign: 'center', padding: 10, flex: 1}}>{errorMessage}</Text>
+				</Animated.View>
+			</View>
+		);
 	}
 }
 
@@ -526,17 +633,17 @@ class Main extends Component {
 		};
 
 		LocaleConfig.locales['es'] = {
-			monthNames: [translate("system_january"),translate("system_february"),translate("system_march"),translate("system_april"),
-			translate("system_may"),translate("system_june"),translate("system_july"),translate("system_august"),
-			translate("system_september"),translate("system_october"),translate("system_november"),translate("system_december")],
-			monthNamesShort: ['Janv.','Févr.','Mars','Avril','Mai','Juin','Juil.','Août','Sept.','Oct.','Nov.','Déc.'],
-			dayNames: ['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'],
-			dayNamesShort: [translate("system_sunday_short"),translate("system_monday_short"),translate("system_tuesday_short"),
-				translate("system_wednesday_short"),translate("system_thursday_short"),translate("system_friday_short"),translate("system_saturday_short")],
+			monthNames: [translate("system_january"), translate("system_february"), translate("system_march"), translate("system_april"),
+			translate("system_may"), translate("system_june"), translate("system_july"), translate("system_august"),
+			translate("system_september"), translate("system_october"), translate("system_november"), translate("system_december")],
+			monthNamesShort: ['Janv.', 'Févr.', 'Mars', 'Avril', 'Mai', 'Juin', 'Juil.', 'Août', 'Sept.', 'Oct.', 'Nov.', 'Déc.'],
+			dayNames: ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'],
+			dayNamesShort: [translate("system_sunday_short"), translate("system_monday_short"), translate("system_tuesday_short"),
+			translate("system_wednesday_short"), translate("system_thursday_short"), translate("system_friday_short"), translate("system_saturday_short")],
 			today: 'Aujourd\'hui'
-		  };
+		};
 
-		  LocaleConfig.defaultLocale = 'es';
+		LocaleConfig.defaultLocale = 'es';
 
 		const { navigation } = this.props;
 		this.data = navigation.getParam('moneyData', null).expenses;
@@ -577,8 +684,8 @@ class Main extends Component {
 		// 	return error
 		// }
 
-		
-		  
+
+
 
 		this.backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
 
@@ -1289,17 +1396,33 @@ const AppNavigator = FluidNavigator(
 		Main: { screen: Main },
 		History: { screen: History },
 		ShoppingList: { screen: ShoppingList }
-	}, {
-	initialRouteName: 'Splash'
-}
+	},
+	{
+		initialRouteName: 'Splash'
+	}
 );
 
-let AppContainer = createAppContainer(AppNavigator);
+const RootStack = createStackNavigator(
+	{
+		AppNavigator: {
+			screen: AppNavigator,
+		},
+		MyModal: {
+			screen: ModalScreen,
+		},
+	},
+	{
+		mode: 'modal',
+		headerMode: 'none',
+	}
+);
+
+let AppContainer = createAppContainer(RootStack);
 
 export default () => {
 
 	return (
-		<AppContainer  onNavigationStateChange={(prevState, newState, action) => {
+		<AppContainer onNavigationStateChange={(prevState, newState, action) => {
 			{/* if (action.type === "Navigation/BACK" && newState.index === 0)
 			BackHandler.exitApp() */}
 		}} />
