@@ -353,6 +353,7 @@ class ModalScreen extends React.Component {
 
 		if (password !== this.state.repeatPassword) {
 			this.animateErrorMessage("Passwords do not match")
+			this.setState({ editable: true })
 			return
 		}
 
@@ -1055,7 +1056,7 @@ class Main extends Component {
 	}
 
 	pushData = async (data) => {
-		let snapshot = await firebase.database().ref(`/${this.props.navigation.getParam('code', null)}/`).update(data)
+		let snapshot = await firebase.database().ref(`/${this.props.navigation.getParam('code', null)}/expenses`).update(data)
 	}
 
 	expandPanel = () => {
