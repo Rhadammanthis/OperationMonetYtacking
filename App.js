@@ -6,7 +6,7 @@
  * @flow
  */
 
-import React, { Component, useState, useEffect } from 'react';
+import React, { Component, useState, useEffect, useCallback } from 'react';
 import { LocaleConfig, CalendarList } from 'react-native-calendars';
 import {
 	AsyncStorage,
@@ -201,7 +201,7 @@ class Splash extends Component {
 
 	}
 
-	onSubmit = (code) => {
+	onSubmit = (code, password) => {
 		this.setState({ storedCode: code }, () => {
 			this._retrieveSettings().then(
 				(value) => {
@@ -218,11 +218,13 @@ class Splash extends Component {
 		})
 	}
 
-	onCodeCreated = (code) => {
-		this.setState({ code: code.toString() })
+	onCodeCreated = (code, password) => {
+		this.setState({ code: code.toString(), password: password })
 	}
 
 	_renderForm = () => {
+
+		const {password, code}= this.state
 
 		if (this.state.storedCode === null)
 			return (
@@ -230,8 +232,8 @@ class Splash extends Component {
 					<View style={{ flex: 1 }} />
 					<View style={{ flex: 3 }}>
 						<TextInput onChangeText={(text) => this.setState({ code: text })} style={{ backgroundColor: 'white', borderRadius: 10, marginVertical: 10 }} keyboardType={'numeric'} value={this.state.code} placeholder={'Account Code'}></TextInput>
-						<TextInput onSubmitEditing={this.onSubmit.bind(this, this.state.code, this.state.password)} onChangeText={(text) => this.setState({ password: text })} style={{ backgroundColor: 'white', borderRadius: 10, marginVertical: 10 }} secureTextEntry={true} value={this.state.password} placeholder={'Password'}></TextInput>
-						<TouchableNativeFeedback onPress={this.onSubmit.bind(this, this.state.code)}
+						<TextInput onSubmitEditing={this.onSubmit.bind(this, code, password)} onChangeText={(text) => this.setState({ password: text })} style={{ backgroundColor: 'white', borderRadius: 10, marginVertical: 10 }} secureTextEntry={true} value={this.state.password} placeholder={'Password'}></TextInput>
+						<TouchableNativeFeedback onPress={this.onSubmit.bind(this, code, password )}
 							style={{ borderRadius: 20 }}>
 							<View style={{ alignItems: 'center', justifyContent: 'center', backgroundColor: BLU_LIGHT, paddingHorizontal: 20, borderRadius: 20, marginVertical: 10, paddingVertical: 10 }}>
 								<Text style={{ color: 'white' }}> {translate("splash_button")} </Text>
@@ -278,13 +280,13 @@ class ModalScreen extends React.Component {
 	constructor(props) {
 		super(props)
 		//161943 H&K
-		this.state = { email: "", password: "", animError: new Animated.Value(0) }
+		this.state = { email: "", password: "", animError: new Animated.Value(0), spinner: new Animated.Value(0), editable: true, done : false, code: null }
 
 	}
 
 	animateErrorMessage = (message) => {
 
-		this.setState({ errorMessage: message})
+		this.setState({ errorMessage: message })
 
 		const forwardsAnimation = Animated.spring(this.state.animError, {
 			toValue: 1,
@@ -301,70 +303,157 @@ class ModalScreen extends React.Component {
 			tension: 50,
 			useNativeDriver: true
 		})
-	
+
 		forwardsAnimation.start()
 		setTimeout(() => { backwardsAnimation.start() }, 3000)
-		
+
 	}
 
 	onSubmit = (email, password) => {
-		
-		if(password !== this.state.repeatPassword){
+
+
+		const forwardsAnimation = Animated.spring(this.state.spinner, {
+			toValue: 1,
+			duration: 500,
+			friction: 8,
+			tension: 50,
+			useNativeDriver: true
+		})
+
+		const backwardsAnimation = Animated.spring(this.state.spinner, {
+			toValue: 0,
+			duration: 1000,
+			friction: 8,
+			tension: 50,
+			useNativeDriver: true
+		})
+
+		this.setState({ editable: false })
+
+		if (password !== this.state.repeatPassword) {
 			this.animateErrorMessage("Passwords do not match")
 			return
 		}
-		
-		firebase.auth()
-			.createUserWithEmailAndPassword(email, password)
-			.then((value) => { 
 
-				var code = Math.floor(100000 + Math.random() * 900000)
-				var userData = { email: email, dateCreated: new Date().getDate() }
 
-				this.pushData(`/users/${code}/`, userData)
-			})
-			.catch((reason) => { 
-				this.animateErrorMessage(reason.message)
-			})
+		forwardsAnimation.start()
+
+		setTimeout(() => {
+			firebase.auth()
+				.createUserWithEmailAndPassword(email, password)
+				.then((value) => {
+
+					
+
+					var code = Math.floor(100000 + Math.random() * 900000)
+					var userData = { email: email, dateCreated: new Date().getDate() }
+
+					this.pushData(`/users/${code}/`, userData, () => {
+						backwardsAnimation.start()
+						LayoutAnimation.configureNext({
+							duration: 700,
+							create: {
+								type: LayoutAnimation.Types.spring,
+								property: LayoutAnimation.Properties.scaleXY,
+								springDamping: 1,
+								duration: 600
+							},
+							update: {
+								type: LayoutAnimation.Types.spring,
+								property: LayoutAnimation.Properties.scaleXY,
+								springDamping: 1,
+								duration: 600
+							},
+							delete: {
+								type: LayoutAnimation.Types.easeOut,
+								property: LayoutAnimation.Properties.opacity,
+								springDamping: 1,
+								duration: 400
+							}
+						})
+				
+						this.setState({code : code})
+					})
+				})
+				.catch((reason) => {
+					backwardsAnimation.start()
+					setTimeout(() => { this.animateErrorMessage(reason.message) }, 200)
+					// this.animateErrorMessage(reason.message)
+				})
+				.finally(() => this.setState({ editable: true }))
+		}, 1500)
+
 	}
 
-	pushData = async (ref, value) => {
+	pushData = async (ref, value, callback) => {
 		console.log(ref)
-		let snapshot = await firebase.database().ref(ref).set(value)
+		let snapshot = await firebase.database().ref(ref)
+			.set(value)
+			.then((value) => callback())
 
 		console.log(snapshot.val())
 	}
 
 	render() {
-		const { animError, errorMessage } = this.state
+		const { animError, errorMessage, spinner, editable, code, password } = this.state
+		var accountCreated = code !== null;
 		return (
 			<View style={{ flex: 1, backgroundColor: BLU, justifyContent: "center", alignItems: "center" }}>
-				<Text style={{ color: "white", textAlign: 'center', fontSize: 30 }}>Create an Account</Text>
+				<Text style={{ color: "white", textAlign: 'center', fontSize: 30, paddingHorizontal: 20 }}>{accountCreated ? "Account Succesfully Created!" : "Create an Account"}</Text>
 				<View style={{ flexDirection: 'row', marginTop: 20 }}>
 					<View style={{ flex: 1 }} />
+					{accountCreated ? 
 					<View style={{ flex: 3 }}>
-						<Text style={{ color: "white" }}>Email</Text>
-						<TextInput onChangeText={(text) => this.setState({ email: text })} style={{ backgroundColor: 'white', borderRadius: 10, marginVertical: 5 }} keyboardType={'email-address'} value={this.state.email} placeholder={'Email'}></TextInput>
-						<Text style={{ color: "white", marginTop: 10 }}>Password</Text>
-						<TextInput onChangeText={(text) => this.setState({ password: text })} style={{ backgroundColor: 'white', borderRadius: 10, marginVertical: 5 }} secureTextEntry={true} value={this.state.password} placeholder={'Password'}></TextInput>
-						<Text style={{ color: "white", marginTop: 10 }}>Repeat Password</Text>
-						<TextInput onChangeText={(text) => this.setState({ repeatPassword: text })} style={{ backgroundColor: 'white', borderRadius: 10, marginVertical: 5 }} secureTextEntry={true} value={this.state.repeatPassword} placeholder={'Password'}></TextInput>
-						<TouchableNativeFeedback onPress={this.onSubmit.bind(this, this.state.email, this.state.password)}
+					<View style={{ justifyContent: 'center', alignItems: "center", marginVertical: 20}}>
+							<View style={{ width: 60, height: 60, borderRadius: 30, alignItems: "center", justifyContent: 'center', backgroundColor: '#afc474'}}>
+								<Icon color={'white'} size={60} name="check-circle" />
+							</View>
+						</View>
+						<Text style={{ color: "white", textAlign: 'center', fontSize: 18 }}>Your account code is:</Text>
+						<Text style={{ color: "white", fontSize: 30, marginVertical: 10, textAlign: 'center' }}>{code.toString()}</Text>
+						<Text style={{ color: "white", paddingHorizontal: 5, textAlign: 'center', fontSize: 18 }}>You can share this code with others to access the same account</Text>
+						<TouchableNativeFeedback onPress={(event) => { this.props.navigation.state.params.onCodeCreated(code, password); this.props.navigation.goBack()}}
 							style={{ borderRadius: 20 }}>
 							<View style={{ alignItems: 'center', justifyContent: 'center', backgroundColor: BLU_LIGHT, paddingHorizontal: 20, borderRadius: 20, marginVertical: 20, paddingVertical: 10 }}>
-								<Text style={{ color: 'white' }}> Sign Up </Text>
+								<Text style={{ color: 'white' }}> LOG IN </Text>
 							</View>
 						</TouchableNativeFeedback>
-					</View>
+					</View> :
+						<View style={{ flex: 3 }}>
+							<Text style={{ color: "white" }}>Email</Text>
+							<TextInput editable={editable} onChangeText={(text) => this.setState({ email: text })} style={{ backgroundColor: 'white', borderRadius: 10, marginVertical: 5 }} keyboardType={'email-address'} value={this.state.email} placeholder={'Email'}></TextInput>
+							<Text style={{ color: "white", marginTop: 10 }}>Password</Text>
+							<TextInput editable={editable} onChangeText={(text) => this.setState({ password: text })} style={{ backgroundColor: 'white', borderRadius: 10, marginVertical: 5 }} secureTextEntry={true} value={this.state.password} placeholder={'Password'}></TextInput>
+							<Text style={{ color: "white", marginTop: 10 }}>Repeat Password</Text>
+							<TextInput editable={editable} onChangeText={(text) => this.setState({ repeatPassword: text })} style={{ backgroundColor: 'white', borderRadius: 10, marginVertical: 5 }} secureTextEntry={true} value={this.state.repeatPassword} placeholder={'Password'}></TextInput>
+							<TouchableNativeFeedback onPress={this.onSubmit.bind(this, this.state.email, this.state.password)}
+								style={{ borderRadius: 20 }}>
+								<View style={{ alignItems: 'center', justifyContent: 'center', backgroundColor: BLU_LIGHT, paddingHorizontal: 20, borderRadius: 20, marginVertical: 20, paddingVertical: 10 }}>
+									<Text style={{ color: 'white' }}> Sign Up </Text>
+								</View>
+							</TouchableNativeFeedback>
+						</View>}
 					<View style={{ flex: 1 }} />
 				</View>
-				<Animated.View style={[{  backgroundColor: '#AA3C3B', borderRadius: 20, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', marginHorizontal: width / 6, position: 'absolute', bottom: 0 }, { transform: [{
+				<Animated.View style={{
+					position: "absolute", bottom: 0, transform: [{
+						translateY: spinner.interpolate({
+							inputRange: [0, 1],
+							outputRange: [height + 150, height * -.1]
+						})
+					}]
+				}}>
+					<Progress.Circle thickness={15} size={50} indeterminate={true} />
+				</Animated.View>
+				<Animated.View style={[{ backgroundColor: '#AA3C3B', borderRadius: 20, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', marginHorizontal: width / 6, position: 'absolute', bottom: 0 }, {
+					transform: [{
 						translateY: animError.interpolate({
 							inputRange: [0, 1],
-							outputRange: [150, -50]
+							outputRange: [150, height * -.1]
 						})
-					}]}]}>
-					<Text style={{color: 'white', textAlign: 'center', padding: 10, flex: 1}}>{errorMessage}</Text>
+					}]
+				}]}>
+					<Text style={{ color: 'white', textAlign: 'center', padding: 10, flex: 1 }}>{errorMessage}</Text>
 				</Animated.View>
 			</View>
 		);
