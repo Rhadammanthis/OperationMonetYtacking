@@ -104,26 +104,28 @@ class Splash extends Component {
 		this.state = { code: "", storedCode: null, settings: {} }
 	}
 
-	_storeData = async (code) => {
+	_storeData = async (code, password) => {
 		console.log("STORE DATA")
 		try {
 			await AsyncStorage.setItem('@AccountCode:key24', code);
+			await AsyncStorage.setItem('@AccountCode:password', password);
 			console.log("Saved!")
 		} catch (error) {
 			// Error saving data
 		}
 	};
 
-	_retrieveData = async () => {
+	_retrieveData = async (code, password) => {
 		console.log("RETRIEVE DATA")
 		try {
-			var code = await AsyncStorage.getItem('@AccountCode:key24');
+			var code = await AsyncStorage.getItem('@AccountCode:key24') || code;
+			var password = await AsyncStorage.getItem('@AccountCode:password') || password;
 
 
 			console.log("Code", code)
 			console.log("State Code", this.state.code)
 
-			if (code === null)
+			if (code === undefined)
 				if (this.state.code === '' || this.state.code === null) {
 					// this.setState({ storedCode: code })
 					return Promise.reject(new Error("No code available"))
@@ -134,14 +136,33 @@ class Splash extends Component {
 			this.setState({ storedCode: code })
 
 			try {
-				let snapshot = await firebase.database().ref(`/${code}/`).once('value');
+				let snapshot = await firebase.database().ref(`/users/${code}/`).once('value');
 
-				console.log(snapshot.val())
-
+				console.log(snapshot.val().email)
+				
 				if (snapshot.val() === null)
 					return Promise.reject(new Error("No data available using that code"))
 
-				return snapshot.val();
+				const email = snapshot.val().email
+				console.log("password", password)
+
+				let user = await firebase.auth().signInWithEmailAndPassword(email, password)
+				console.log("LOGGED IN", user)
+					
+				var moneyData = await firebase.database().ref(`/${code}/`)
+					.once('value')
+					.then((value) => {
+						return value.val() || { expenses: {}, shopping: []}
+					})
+					.catch(errorMessage => {
+						console.log("Error", errorMessage)
+						return errorMessage
+					})
+				
+				
+				return moneyData
+
+				// return snapshot.val();
 			}
 			catch (error) {
 				return error
@@ -206,8 +227,8 @@ class Splash extends Component {
 			this._retrieveSettings().then(
 				(value) => {
 
-					this._retrieveData()
-						.then((moneyData) => this._storeData(code)
+					this._retrieveData(code, password)
+						.then((moneyData) => this._storeData(code, password)
 							.then(value => {
 								console.log("Retrieve data success SUBMIT1", moneyData)
 								this.props.navigation.navigate('Main', { moneyData: moneyData, code: this.state.storedCode, currency: this.state.settings })
@@ -712,6 +733,8 @@ class ListItem extends Component {
 class Main extends Component {
 	constructor(props) {
 		super(props);
+
+		console.log("I GOT TO MAIN")
 
 		this.state = {
 			selectedDay: null, modalVisible: false, catSelected: "vgt",
