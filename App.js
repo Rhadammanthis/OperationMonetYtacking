@@ -28,7 +28,7 @@ import {
 	DebugInstructions,
 	ReloadInstructions,
 } from 'react-native/Libraries/NewAppScreen';
-import { StackActions, createAppContainer, createStackNavigator } from "react-navigation";
+import { StackActions, createAppContainer, createStackNavigator, ScrollView } from "react-navigation";
 // import ActionButton from 'react-native-circular-action-menu';
 import ActionButton from 'react-native-action-button';
 import Icon from 'react-native-vector-icons/FontAwesome5';
@@ -107,8 +107,8 @@ class Splash extends Component {
 	_storeData = async (code, password) => {
 		console.log("STORE DATA")
 		try {
-			await AsyncStorage.setItem('@AccountCode:key24', code);
-			await AsyncStorage.setItem('@AccountCode:password', password);
+			await AsyncStorage.setItem('@persistentItem:code', code);
+			await AsyncStorage.setItem('@persistentItem:password', password);
 			console.log("Saved!")
 		} catch (error) {
 			// Error saving data
@@ -118,20 +118,22 @@ class Splash extends Component {
 	_retrieveData = async (code, password) => {
 		console.log("RETRIEVE DATA")
 		try {
-			var code = await AsyncStorage.getItem('@AccountCode:key24') || code ? code : undefined;
-			var password = await AsyncStorage.getItem('@AccountCode:password') || password ? password : undefined;
+			var pCode = await AsyncStorage.getItem('@persistentItem:code')
+			var pPassword = await AsyncStorage.getItem('@persistentItem:password')
 
+			code === null ? undefined : pCode;
+			password === null ? undefined : pPassword;
 
 			console.log("Code", code)
-			console.log("State Code", this.state.code)
+			console.log("Password", password)
 
 			if (code === undefined)
 				return Promise.reject(new Error("Account code needed"))
 			if (password === undefined)
 				return Promise.reject(new Error("Password needed"))
-					
 
-			this.setState({busy: true})
+
+			this.setState({ busy: true, code: code })
 
 			try {
 				let snapshot = await firebase.database().ref(`/users/${code}/`).once('value');
@@ -145,7 +147,7 @@ class Splash extends Component {
 				console.log("password", password)
 
 				let user = await firebase.auth().signInWithEmailAndPassword(email, password)
-					.catch((reason) => {return Promise.reject(new Error(reason.message))})
+					.catch((reason) => { return Promise.reject(new Error(reason.message)) })
 				console.log("LOGGED IN", user)
 
 				var moneyData = await firebase.database().ref(`/${code}/`)
@@ -175,7 +177,7 @@ class Splash extends Component {
 	_retrieveSettings = async () => {
 		console.log("RETRIEVE SETTINGS")
 		try {
-			const value = await AsyncStorage.getItem('@AccountCode:settings3');
+			const value = await AsyncStorage.getItem('@persistentItem:currency');
 			console.log("Settings", value)
 
 			if (value === null)
@@ -191,52 +193,38 @@ class Splash extends Component {
 
 	componentDidMount() {
 
-		console.log("MOUNTED")
-		// const didBlurSubscription = this.props.navigation.addListener(
-		// 	'didFocus',
-		// 	payload => {
-		// 		console.log('didFocus', payload);
-		// 		const { action } = payload;
-
-		// 		if (action.type === "Navigation/COMPLETE_TRANSITION") {
-		// 			this._retrieveData()
-		// 				.then(value => {
-		// 					console.log("Retrieve data success", value)
-		// 					// this.props.navigation.navigate('Main', { moneyData: value, code: this.state.storedCode })
-
-		// 				})
-		// 				.catch(error => console.log("Retrieve data error", error))
-		// 		}
-		// 	}
-		// );
 
 		this._retrieveSettings()
 			.then((value) => this._retrieveData()
 				.then(value => {
 					console.log("Retrieve data success", value)
-					this.props.navigation.navigate('Main', { moneyData: value, code: this.state.storedCode, currency: this.state.settings })
+					this.props.navigation.navigate('Main', { moneyData: value, code: this.state.code, currency: this.state.settings })
 				})
-				.catch(error => console.log("Retrieve data error", error)))
+				.catch(error => {
+					this.animateErrorMessage(error.message)
+				}))
+				.finally(() => this.setState({ busy: false}))
 			.catch((error) => this.props.navigation.navigate('Tutorial'))
 
 	}
 
 	onSubmit = (code, password) => {
-		
+
 
 		this._retrieveSettings().then(
 			(value) => {
 				this._retrieveData(code, password)
-					.then((moneyData) => this._storeData(code, password)
-						.then(value => {
-							console.log("Retrieve data success SUBMIT1", moneyData)
-							this.props.navigation.navigate('Main', { moneyData: moneyData, code: this.state.storedCode, currency: this.state.settings })
-						})
+					.then((moneyData) =>
+						this._storeData(code, password)
+							.then(value => {
+								console.log("Retrieve data success SUBMIT1", moneyData)
+								this.props.navigation.navigate('Main', { moneyData: moneyData, code: this.state.code, currency: this.state.settings })
+							})
 					)
 					.catch((error) => {
-						this.setState({ busy: false})
 						this.animateErrorMessage(error.message)
 					})
+					.finally(() => this.setState({ busy: false }))
 			}
 		)
 	}
@@ -270,93 +258,47 @@ class Splash extends Component {
 
 	}
 
-	showProgressSpinner =() => {
-		const forwardsAnimation = Animated.spring(this.state.spinner, {
-			toValue: 1,
-			duration: 500,
-			friction: 8,
-			tension: 50,
-			useNativeDriver: true
-		})
-
-		forwardsAnimation.start()
-		
-	}
-
-	hideProgressSpinner = () => {
-		const backwardsAnimation = Animated.spring(this.state.spinner, {
-			toValue: 0,
-			duration: 1000,
-			friction: 8,
-			tension: 50,
-			useNativeDriver: true
-		})
-
-		backwardsAnimation.start()
-	}
-
 	_renderForm = () => {
 
-		const { password, code } = this.state
+		const { busy, code, password } = this.state
 
-		if (this.state.storedCode === null)
-			return (
-				<View style={{ flexDirection: 'row', marginTop: 20 }}>
-					<View style={{ flex: 1 }} />
-					<View style={{ flex: 3 }}>
-						<TextInput onChangeText={(text) => this.setState({ code: text })} style={{ backgroundColor: 'white', borderRadius: 10, marginVertical: 10 }} keyboardType={'numeric'} value={this.state.code} placeholder={'Account Code'}></TextInput>
-						<TextInput onSubmitEditing={this.onSubmit.bind(this, code, password)} onChangeText={(text) => this.setState({ password: text })} style={{ backgroundColor: 'white', borderRadius: 10, marginVertical: 10 }} secureTextEntry={true} value={this.state.password} placeholder={'Password'}></TextInput>
-						<TouchableNativeFeedback onPress={this.onSubmit.bind(this, code, password)}
-							style={{ borderRadius: 20 }}>
-							<View style={{ alignItems: 'center', justifyContent: 'center', backgroundColor: BLU_LIGHT, paddingHorizontal: 20, borderRadius: 20, marginVertical: 10, paddingVertical: 10 }}>
-								<Text style={{ color: 'white' }}> {translate("splash_button")} </Text>
-							</View>
-						</TouchableNativeFeedback>
-						<TouchableNativeFeedback onPress={() => this.props.navigation.navigate('MyModal', { onCodeCreated: this.onCodeCreated })}>
-							<Text style={{ textDecorationLine: 'underline', color: BLU_LIGHT, textAlign: "center", marginVertical: 10 }}> Don't have an account? </Text>
-						</TouchableNativeFeedback>
-						{/* <Button onPress={this.onSubmit.bind(this, this.state.code)} style={{ marginHorizontal: 50 }} title={'Submit'} /> */}
-					</View>
-					<View style={{ flex: 1 }} />
+		console.log("RENDER FORM?", busy)
+
+		return !busy
+			?
+			<View style={{ flexDirection: 'row', marginTop: 20 }}>
+				<View style={{ flex: 1 }} />
+				<View style={{ flex: 3 }}>
+					<TextInput onChangeText={(text) => this.setState({ code: text })} style={{ backgroundColor: 'white', borderRadius: 10, marginVertical: 10 }} keyboardType={'numeric'} value={this.state.code} placeholder={'Account Code'}></TextInput>
+					<TextInput onSubmitEditing={this.onSubmit.bind(this, code, password)} onChangeText={(text) => this.setState({ password: text })} style={{ backgroundColor: 'white', borderRadius: 10, marginVertical: 10 }} secureTextEntry={true} value={this.state.password} placeholder={'Password'}></TextInput>
+					<TouchableNativeFeedback onPress={this.onSubmit.bind(this, code, password)}
+						style={{ borderRadius: 20 }}>
+						<View style={{ alignItems: 'center', justifyContent: 'center', backgroundColor: BLU_LIGHT, paddingHorizontal: 20, borderRadius: 20, marginVertical: 10, paddingVertical: 10 }}>
+							<Text style={{ color: 'white' }}> {translate("splash_button")} </Text>
+						</View>
+					</TouchableNativeFeedback>
+					<TouchableNativeFeedback onPress={() => this.props.navigation.navigate('MyModal', { onCodeCreated: this.onCodeCreated })}>
+						<Text style={{ textDecorationLine: 'underline', color: BLU_LIGHT, textAlign: "center", marginVertical: 10 }}> Don't have an account? </Text>
+					</TouchableNativeFeedback>
 				</View>
-			)
-
-		return (
-			<View style={{ flexDirection: 'row', justifyContent: 'center', marginTop: 20 }}>
-				<Progress.Bar
-					color={BLU_LIGHT}
-					width={300}
-					style={{ margin: 10 }}
-					progress={0}
-					indeterminate={true}
-				/>
+				<View style={{ flex: 1 }} />
 			</View>
-		)
-	}
-
-	renderSpinner = () => {
-		const { busy } = this.state
-
-		return busy ? 
-		<Animated.View style={{ width: width, justifyContent: 'center', alignItems: 'center',
-		position: "absolute", bottom: height * .571	}}>
-		<Progress.CircleSnail color={'white'} thickness={5} size={170} indeterminate={true} />
-	</Animated.View> : null
+			: null
 	}
 
 
 	render() {
-		const {animError, errorMessage, busy} = this.state
+		const { animError, errorMessage, busy } = this.state
 		return (
 			<View style={{ flex: 1, justifyContent: 'center', backgroundColor: BLU }}>
 				<View style={{ alignItems: 'center', justifyContent: 'center', }}>
-					<View style={{ backgroundColor: BLU,  width: 160, height: 160, borderRadius: 80, borderColor: 'white', borderWidth: busy ? 0 : 4, alignItems: 'center', justifyContent: 'center' }}>
-						<Image resizeMode={'contain'} style={{ width: 150, height: 150, borderRadius: 90 }} source={require('./img/logo.png')} />
+					<View style={{ backgroundColor: BLU, width: 160, height: 160, borderRadius: 80, borderColor: 'white', borderWidth: busy ? 0 : 4, alignItems: 'center', justifyContent: 'center' }}>
+						{busy ? <Progress.CircleSnail style={{ position: 'absolute' }} color={'white'} thickness={5} size={170} indeterminate={true} /> : null}
+						<Image resizeMode={'contain'} style={{ width: 150, height: 150, borderRadius: 90, position: "absolute" }} source={require('./img/logo.png')} />
 					</View>
 					<Text style={{ color: 'white', fontSize: 25, fontWeight: 'bold', fontFamily: 'Roboto', marginTop: 10 }}> Spendless</Text>
 				</View>
 				{this._renderForm()}
-				{this.renderSpinner()}
 				<Animated.View style={[{ backgroundColor: '#AA3C3B', borderRadius: 20, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', marginHorizontal: width / 6, position: 'absolute', bottom: 0 }, {
 					transform: [{
 						translateY: animError.interpolate({
@@ -601,7 +543,7 @@ class Currency extends Component {
 
 	_storeData = async (country) => {
 		try {
-			await AsyncStorage.setItem('@AccountCode:settings3', country.currency);
+			await AsyncStorage.setItem('@persistentItem:currency', country.currency);
 			return { success: true, value: country }
 		} catch (error) {
 			// Error saving data
@@ -1245,13 +1187,17 @@ class Main extends Component {
 				{this._renderSummaryModal(this.currentMonth)}
 				<ActionButton onPress={() => { this.setState({ showSummary: true }) }} renderIcon={(active) => {
 					return <Icon color={'white'} size={15} name="chart-line" />
-				}} offsetY={15} offsetX={20} spacing={15} verticalOrientation="down" position="right" spacing={15} fixNativeFeedbackRadius={true} position="right" backdrop={
+				}} offsetY={15} offsetX={120} spacing={15} verticalOrientation="down" position="right" spacing={15} fixNativeFeedbackRadius={true} position="right" backdrop={
 					<View style={{ position: 'absolute', top: 0, left: 0, height: height, width: width, backgroundColor: 'black', opacity: 1 }}></View>
 				} size={40} buttonColor={BLU_LIGHT}>
 				</ActionButton>
-				<ActionButton onPress={() => { this.props.navigation.navigate('ShoppingList', { shopping: this.shopping, code: this.code }) }} renderIcon={(active) => {
+				<ActionButton onPress={() => { console.log("CODE", this.code); this.props.navigation.navigate('ShoppingList', { shopping: this.shopping, code: this.code }) }} renderIcon={(active) => {
 					return <Icon color={'white'} size={15} name="tasks" />
 				}} offsetY={15} offsetX={70} spacing={15} verticalOrientation="down" position="right" spacing={15} fixNativeFeedbackRadius={true} position="right" size={40} buttonColor={BLU_LIGHT}>
+				</ActionButton>
+				<ActionButton onPress={() => { console.log("CODE", this.code); this.props.navigation.navigate('Profile', { code: this.code }) }} renderIcon={(active) => {
+					return <Icon color={'white'} size={15} name="user" />
+				}} offsetY={15} offsetX={20} spacing={15} verticalOrientation="down" position="right" spacing={15} fixNativeFeedbackRadius={true} position="right" size={40} buttonColor={BLU_LIGHT}>
 				</ActionButton>
 				{this._shouldRenderActionButton()}
 			</View >
@@ -1346,6 +1292,48 @@ class History extends Component {
 	}
 }
 
+class Profile extends Component {
+	constructor(props) {
+		super(props)
+		this.state = { refresh: false }
+
+		this.code = this.props.navigation.getParam('code', null)
+		this.user = firebase.auth().currentUser
+
+		console.log(this.code)
+	}
+
+	componentDidMount() {
+
+
+	}
+
+	render() {
+		return (
+			<View style={{ flex: 1, flexDirection: 'column', backgroundColor: BLU, paddingHorizontal: 20 }}>
+				<Text style={{ color: 'white', fontSize: 35, marginVertical: 20 }}>Profile</Text>
+				<Text style={{ color: 'white', fontSize: 20 }}>Account Email</Text>
+				<Text style={{ color: 'white', fontSize: 17 }}>{this.user.email}</Text>
+				<Text style={{ color: 'white', fontSize: 20, marginTop: 10 }}>Account Code</Text>
+				<Text style={{ color: 'white', fontSize: 17 }}>{this.code}</Text>
+				<View style={{ flex: 1 }} />
+				<TouchableNativeFeedback onPress={(event) => {
+					firebase.auth().signOut()
+						.then((value) => { 
+							AsyncStorage.multiRemove(["@persistentItem:password","@persistentItem:code"])
+							.then((value) => { this.props.navigation.dispatch(StackActions.popToTop()) }) 
+						})
+				}}
+					style={{ borderRadius: 20 }}>
+					<View style={{ alignItems: 'center', justifyContent: 'center', backgroundColor: "#AA3C3B", paddingHorizontal: 20, borderRadius: 20, marginVertical: 20, paddingVertical: 10 }}>
+						<Text style={{ color: 'white' }}> Log out </Text>
+					</View>
+				</TouchableNativeFeedback>
+			</View>
+		)
+	}
+}
+
 class ShoppingList extends Component {
 	constructor(props) {
 		super(props)
@@ -1358,7 +1346,6 @@ class ShoppingList extends Component {
 	componentDidMount() {
 
 		this.fetchData().then((shoppingList) => { this.shoppingList = shoppingList; this.forceUpdate(); }).catch((error) => console.log("error", error))
-
 
 	}
 
@@ -1583,7 +1570,8 @@ const AppNavigator = FluidNavigator(
 		Tutorial: { screen: Tutorial },
 		Main: { screen: Main },
 		History: { screen: History },
-		ShoppingList: { screen: ShoppingList }
+		ShoppingList: { screen: ShoppingList },
+		Profile: { screen: Profile }
 	},
 	{
 		initialRouteName: 'Splash'
