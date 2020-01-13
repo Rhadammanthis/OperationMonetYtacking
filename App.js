@@ -648,25 +648,31 @@ class Tutorial extends Component {
 					onEndReached={(distanceFromEnd) => { console.log("THE END"); springAnimation.start() }}
 					data={[
 						{
-							id: "1",
+							id: "0",
+							title: translate("tutorial_card_0_title"),
+							description: translate("tutorial_card_0_description"),
+							image: require("./img/account_smol.png")
+						},
+						{
+							id: "2",
 							title: translate("tutorial_card_1_title"),
 							description: translate("tutorial_card_1_description"),
 							image: require("./img/screen_grab_1_smol.png")
 						},
 						{
-							id: "2",
+							id: "3",
 							title: translate("tutorial_card_2_title"),
 							description: translate("tutorial_card_2_description"),
 							image: require("./img/screen_grab_2_smol.png")
 						},
 						{
-							id: "3 ",
+							id: "4",
 							title: translate("tutorial_card_3_title"),
 							description: translate("tutorial_card_3_description"),
 							image: require("./img/screen_grab_3_smol.png")
 						},
 						{
-							id: "4",
+							id: "5",
 							title: translate("tutorial_card_4_title"),
 							description: translate("tutorial_card_4_description"),
 							image: require("./img/screen_grab_4_smol.png")
