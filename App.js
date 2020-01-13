@@ -101,7 +101,7 @@ class Splash extends Component {
 	constructor(props) {
 		super(props)
 		//161943 H&K
-		this.state = { code: "", storedCode: null, settings: {} }
+		this.state = { code: "", storedCode: null, settings: {}, animError: new Animated.Value(0), spinner: new Animated.Value(0), errorMessage: "", busy: false }
 	}
 
 	_storeData = async (code, password) => {
@@ -118,28 +118,26 @@ class Splash extends Component {
 	_retrieveData = async (code, password) => {
 		console.log("RETRIEVE DATA")
 		try {
-			var code = await AsyncStorage.getItem('@AccountCode:key24') || code;
-			var password = await AsyncStorage.getItem('@AccountCode:password') || password;
+			var code = await AsyncStorage.getItem('@AccountCode:key24') || code ? code : undefined;
+			var password = await AsyncStorage.getItem('@AccountCode:password') || password ? password : undefined;
 
 
 			console.log("Code", code)
 			console.log("State Code", this.state.code)
 
 			if (code === undefined)
-				if (this.state.code === '' || this.state.code === null) {
-					// this.setState({ storedCode: code })
-					return Promise.reject(new Error("No code available"))
-				}
-				else
-					code = this.state.code
+				return Promise.reject(new Error("Account code needed"))
+			if (password === undefined)
+				return Promise.reject(new Error("Password needed"))
+					
 
-			this.setState({ storedCode: code })
+			this.setState({busy: true})
 
 			try {
 				let snapshot = await firebase.database().ref(`/users/${code}/`).once('value');
 
-				console.log(snapshot.val().email)
-				
+				// console.log(snapshot.val().email)
+
 				if (snapshot.val() === null)
 					return Promise.reject(new Error("No data available using that code"))
 
@@ -147,29 +145,30 @@ class Splash extends Component {
 				console.log("password", password)
 
 				let user = await firebase.auth().signInWithEmailAndPassword(email, password)
+					.catch((reason) => {return Promise.reject(new Error(reason.message))})
 				console.log("LOGGED IN", user)
-					
+
 				var moneyData = await firebase.database().ref(`/${code}/`)
 					.once('value')
 					.then((value) => {
-						return value.val() || { expenses: {}, shopping: []}
+						return value.val() || { expenses: {}, shopping: [] }
 					})
 					.catch(errorMessage => {
 						console.log("Error", errorMessage)
 						return errorMessage
 					})
-				
-				
+
+
 				return moneyData
 
 				// return snapshot.val();
 			}
 			catch (error) {
-				return error
+				return Promise.reject(new Error(error))
 			}
 
 		} catch (error) {
-			return error
+			return Promise.reject(new Error(error))
 		}
 	};
 
@@ -223,29 +222,82 @@ class Splash extends Component {
 	}
 
 	onSubmit = (code, password) => {
-		this.setState({ storedCode: code }, () => {
-			this._retrieveSettings().then(
-				(value) => {
+		
 
-					this._retrieveData(code, password)
-						.then((moneyData) => this._storeData(code, password)
-							.then(value => {
-								console.log("Retrieve data success SUBMIT1", moneyData)
-								this.props.navigation.navigate('Main', { moneyData: moneyData, code: this.state.storedCode, currency: this.state.settings })
-							})
-						)
-				}
-			)
-		})
+		this._retrieveSettings().then(
+			(value) => {
+				this._retrieveData(code, password)
+					.then((moneyData) => this._storeData(code, password)
+						.then(value => {
+							console.log("Retrieve data success SUBMIT1", moneyData)
+							this.props.navigation.navigate('Main', { moneyData: moneyData, code: this.state.storedCode, currency: this.state.settings })
+						})
+					)
+					.catch((error) => {
+						this.setState({ busy: false})
+						this.animateErrorMessage(error.message)
+					})
+			}
+		)
 	}
 
 	onCodeCreated = (code, password) => {
 		this.setState({ code: code.toString(), password: password })
 	}
 
+	animateErrorMessage = (message) => {
+
+		this.setState({ errorMessage: message })
+
+		const forwardsAnimation = Animated.spring(this.state.animError, {
+			toValue: 1,
+			duration: 200,
+			friction: 8,
+			tension: 50,
+			useNativeDriver: true
+		})
+
+		const backwardsAnimation = Animated.spring(this.state.animError, {
+			toValue: 0,
+			duration: 300,
+			friction: 8,
+			tension: 50,
+			useNativeDriver: true
+		})
+
+		forwardsAnimation.start()
+		setTimeout(() => { backwardsAnimation.start() }, 3000)
+
+	}
+
+	showProgressSpinner =() => {
+		const forwardsAnimation = Animated.spring(this.state.spinner, {
+			toValue: 1,
+			duration: 500,
+			friction: 8,
+			tension: 50,
+			useNativeDriver: true
+		})
+
+		forwardsAnimation.start()
+		
+	}
+
+	hideProgressSpinner = () => {
+		const backwardsAnimation = Animated.spring(this.state.spinner, {
+			toValue: 0,
+			duration: 1000,
+			friction: 8,
+			tension: 50,
+			useNativeDriver: true
+		})
+
+		backwardsAnimation.start()
+	}
+
 	_renderForm = () => {
 
-		const {password, code}= this.state
+		const { password, code } = this.state
 
 		if (this.state.storedCode === null)
 			return (
@@ -254,14 +306,14 @@ class Splash extends Component {
 					<View style={{ flex: 3 }}>
 						<TextInput onChangeText={(text) => this.setState({ code: text })} style={{ backgroundColor: 'white', borderRadius: 10, marginVertical: 10 }} keyboardType={'numeric'} value={this.state.code} placeholder={'Account Code'}></TextInput>
 						<TextInput onSubmitEditing={this.onSubmit.bind(this, code, password)} onChangeText={(text) => this.setState({ password: text })} style={{ backgroundColor: 'white', borderRadius: 10, marginVertical: 10 }} secureTextEntry={true} value={this.state.password} placeholder={'Password'}></TextInput>
-						<TouchableNativeFeedback onPress={this.onSubmit.bind(this, code, password )}
+						<TouchableNativeFeedback onPress={this.onSubmit.bind(this, code, password)}
 							style={{ borderRadius: 20 }}>
 							<View style={{ alignItems: 'center', justifyContent: 'center', backgroundColor: BLU_LIGHT, paddingHorizontal: 20, borderRadius: 20, marginVertical: 10, paddingVertical: 10 }}>
 								<Text style={{ color: 'white' }}> {translate("splash_button")} </Text>
 							</View>
 						</TouchableNativeFeedback>
 						<TouchableNativeFeedback onPress={() => this.props.navigation.navigate('MyModal', { onCodeCreated: this.onCodeCreated })}>
-							<Text style={{ color: BLU_LIGHT, textAlign: "center", marginVertical: 10 }}> Don't have an account? </Text>
+							<Text style={{ textDecorationLine: 'underline', color: BLU_LIGHT, textAlign: "center", marginVertical: 10 }}> Don't have an account? </Text>
 						</TouchableNativeFeedback>
 						{/* <Button onPress={this.onSubmit.bind(this, this.state.code)} style={{ marginHorizontal: 50 }} title={'Submit'} /> */}
 					</View>
@@ -282,16 +334,39 @@ class Splash extends Component {
 		)
 	}
 
+	renderSpinner = () => {
+		const { busy } = this.state
+
+		return busy ? 
+		<Animated.View style={{ width: width, justifyContent: 'center', alignItems: 'center',
+		position: "absolute", bottom: height * .571	}}>
+		<Progress.CircleSnail color={'white'} thickness={5} size={170} indeterminate={true} />
+	</Animated.View> : null
+	}
+
+
 	render() {
+		const {animError, errorMessage, busy} = this.state
 		return (
 			<View style={{ flex: 1, justifyContent: 'center', backgroundColor: BLU }}>
 				<View style={{ alignItems: 'center', justifyContent: 'center', }}>
-					<View style={{ width: 160, height: 160, borderRadius: 40, borderColor: 'white', borderWidth: 7, alignItems: 'center', justifyContent: 'center' }}>
-						<Image style={{ width: 150, height: 150, borderRadius: 40 }} source={require('./img/logo.png')} />
+					<View style={{ backgroundColor: BLU,  width: 160, height: 160, borderRadius: 80, borderColor: 'white', borderWidth: busy ? 0 : 4, alignItems: 'center', justifyContent: 'center' }}>
+						<Image resizeMode={'contain'} style={{ width: 150, height: 150, borderRadius: 90 }} source={require('./img/logo.png')} />
 					</View>
 					<Text style={{ color: 'white', fontSize: 25, fontWeight: 'bold', fontFamily: 'Roboto', marginTop: 10 }}> Spendless</Text>
 				</View>
 				{this._renderForm()}
+				{this.renderSpinner()}
+				<Animated.View style={[{ backgroundColor: '#AA3C3B', borderRadius: 20, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', marginHorizontal: width / 6, position: 'absolute', bottom: 0 }, {
+					transform: [{
+						translateY: animError.interpolate({
+							inputRange: [0, 1],
+							outputRange: [150, height * -.1]
+						})
+					}]
+				}]}>
+					<Text style={{ color: 'white', textAlign: 'center', padding: 10, flex: 1 }}>{errorMessage}</Text>
+				</Animated.View>
 			</View>
 		)
 	}
@@ -301,7 +376,7 @@ class ModalScreen extends React.Component {
 	constructor(props) {
 		super(props)
 		//161943 H&K
-		this.state = { email: "", password: "", animError: new Animated.Value(0), spinner: new Animated.Value(0), editable: true, done : false, code: null }
+		this.state = { email: "", password: "", animError: new Animated.Value(0), spinner: new Animated.Value(0), editable: true, done: false, code: null }
 
 	}
 
@@ -365,7 +440,7 @@ class ModalScreen extends React.Component {
 				.createUserWithEmailAndPassword(email, password)
 				.then((value) => {
 
-					
+
 
 					var code = Math.floor(100000 + Math.random() * 900000)
 					var userData = { email: email, dateCreated: new Date().getDate() }
@@ -393,8 +468,8 @@ class ModalScreen extends React.Component {
 								duration: 400
 							}
 						})
-				
-						this.setState({code : code})
+
+						this.setState({ code: code })
 					})
 				})
 				.catch((reason) => {
@@ -424,23 +499,23 @@ class ModalScreen extends React.Component {
 				<Text style={{ color: "white", textAlign: 'center', fontSize: 30, paddingHorizontal: 20 }}>{accountCreated ? "Account Succesfully Created!" : "Create an Account"}</Text>
 				<View style={{ flexDirection: 'row', marginTop: 20 }}>
 					<View style={{ flex: 1 }} />
-					{accountCreated ? 
-					<View style={{ flex: 3 }}>
-					<View style={{ justifyContent: 'center', alignItems: "center", marginVertical: 20}}>
-							<View style={{ width: 60, height: 60, borderRadius: 30, alignItems: "center", justifyContent: 'center', backgroundColor: '#afc474'}}>
-								<Icon color={'white'} size={60} name="check-circle" />
+					{accountCreated ?
+						<View style={{ flex: 3 }}>
+							<View style={{ justifyContent: 'center', alignItems: "center", marginVertical: 20 }}>
+								<View style={{ width: 60, height: 60, borderRadius: 30, alignItems: "center", justifyContent: 'center', backgroundColor: '#afc474' }}>
+									<Icon color={'white'} size={60} name="check-circle" />
+								</View>
 							</View>
-						</View>
-						<Text style={{ color: "white", textAlign: 'center', fontSize: 18 }}>Your account code is:</Text>
-						<Text style={{ color: "white", fontSize: 30, marginVertical: 10, textAlign: 'center' }}>{code.toString()}</Text>
-						<Text style={{ color: "white", paddingHorizontal: 5, textAlign: 'center', fontSize: 18 }}>You can share this code with others to access the same account</Text>
-						<TouchableNativeFeedback onPress={(event) => { this.props.navigation.state.params.onCodeCreated(code, password); this.props.navigation.goBack()}}
-							style={{ borderRadius: 20 }}>
-							<View style={{ alignItems: 'center', justifyContent: 'center', backgroundColor: BLU_LIGHT, paddingHorizontal: 20, borderRadius: 20, marginVertical: 20, paddingVertical: 10 }}>
-								<Text style={{ color: 'white' }}> LOG IN </Text>
-							</View>
-						</TouchableNativeFeedback>
-					</View> :
+							<Text style={{ color: "white", textAlign: 'center', fontSize: 18 }}>Your account code is:</Text>
+							<Text style={{ color: "white", fontSize: 30, marginVertical: 10, textAlign: 'center' }}>{code.toString()}</Text>
+							<Text style={{ color: "white", paddingHorizontal: 5, textAlign: 'center', fontSize: 18 }}>You can share this code with others to access the same account</Text>
+							<TouchableNativeFeedback onPress={(event) => { this.props.navigation.state.params.onCodeCreated(code, password); this.props.navigation.goBack() }}
+								style={{ borderRadius: 20 }}>
+								<View style={{ alignItems: 'center', justifyContent: 'center', backgroundColor: BLU_LIGHT, paddingHorizontal: 20, borderRadius: 20, marginVertical: 20, paddingVertical: 10 }}>
+									<Text style={{ color: 'white' }}> LOG IN </Text>
+								</View>
+							</TouchableNativeFeedback>
+						</View> :
 						<View style={{ flex: 3 }}>
 							<Text style={{ color: "white" }}>Email</Text>
 							<TextInput editable={editable} onChangeText={(text) => this.setState({ email: text })} style={{ backgroundColor: 'white', borderRadius: 10, marginVertical: 5 }} keyboardType={'email-address'} value={this.state.email} placeholder={'Email'}></TextInput>
