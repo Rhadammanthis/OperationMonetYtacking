@@ -121,16 +121,14 @@ class Splash extends Component {
 			var pCode = await AsyncStorage.getItem('@persistentItem:code')
 			var pPassword = await AsyncStorage.getItem('@persistentItem:password')
 
-			code === null ? undefined : pCode;
-			password === null ? undefined : pPassword;
+			code = pCode ? pCode : undefined || code;
+			password = pPassword ? pPassword : undefined || password;
 
-			console.log("Code", code)
-			console.log("Password", password)
 
 			if (code === undefined)
-				return Promise.reject(new Error("Account code needed"))
+				return Promise.reject("system_erro_code_needed")
 			if (password === undefined)
-				return Promise.reject(new Error("Password needed"))
+				return Promise.reject("system_error_password_needed")
 
 
 			this.setState({ busy: true, code: code })
@@ -147,7 +145,7 @@ class Splash extends Component {
 				console.log("password", password)
 
 				let user = await firebase.auth().signInWithEmailAndPassword(email, password)
-					.catch((reason) => { return Promise.reject(new Error(reason.message)) })
+					.catch((reason) => { return Promise.reject(reason.code) })
 				console.log("LOGGED IN", user)
 
 				var moneyData = await firebase.database().ref(`/${code}/`)
@@ -165,12 +163,12 @@ class Splash extends Component {
 
 				// return snapshot.val();
 			}
-			catch (error) {
-				return Promise.reject(new Error(error))
+			catch (errorCode) {
+				return Promise.reject(errorCode)
 			}
 
 		} catch (error) {
-			return Promise.reject(new Error(error))
+			return Promise.reject("system_error_async_storage")
 		}
 	};
 
@@ -201,7 +199,7 @@ class Splash extends Component {
 					this.props.navigation.navigate('Main', { moneyData: value, code: this.state.code, currency: this.state.settings })
 				})
 				.catch(error => {
-					this.animateErrorMessage(error.message)
+					this.animateErrorMessage(error)
 				}))
 				.finally(() => this.setState({ busy: false}))
 			.catch((error) => this.props.navigation.navigate('Tutorial'))
@@ -222,7 +220,7 @@ class Splash extends Component {
 							})
 					)
 					.catch((error) => {
-						this.animateErrorMessage(error.message)
+						this.animateErrorMessage(error)
 					})
 					.finally(() => this.setState({ busy: false }))
 			}
@@ -307,7 +305,7 @@ class Splash extends Component {
 						})
 					}]
 				}]}>
-					<Text style={{ color: 'white', textAlign: 'center', padding: 10, flex: 1 }}>{errorMessage}</Text>
+					<Text style={{ color: 'white', textAlign: 'center', padding: 10, flex: 1 }}>{translate(errorMessage)}</Text>
 				</Animated.View>
 			</View>
 		)
@@ -369,7 +367,7 @@ class ModalScreen extends React.Component {
 		this.setState({ editable: false })
 
 		if (password !== this.state.repeatPassword) {
-			this.animateErrorMessage("Passwords do not match")
+			this.animateErrorMessage("system_error_passwords_match")
 			this.setState({ editable: true })
 			return
 		}
@@ -416,7 +414,8 @@ class ModalScreen extends React.Component {
 				})
 				.catch((reason) => {
 					backwardsAnimation.start()
-					setTimeout(() => { this.animateErrorMessage(reason.message) }, 200)
+					console.log("Error", reason)
+					setTimeout(() => { this.animateErrorMessage(reason.code) }, 200)
 					// this.animateErrorMessage(reason.message)
 				})
 				.finally(() => this.setState({ editable: true }))
@@ -438,7 +437,7 @@ class ModalScreen extends React.Component {
 		var accountCreated = code !== null;
 		return (
 			<View style={{ flex: 1, backgroundColor: BLU, justifyContent: "center", alignItems: "center" }}>
-				<Text style={{ color: "white", textAlign: 'center', fontSize: 30, paddingHorizontal: 20 }}>{accountCreated ? "Account Succesfully Created!" : "Create an Account"}</Text>
+				<Text style={{ color: "white", textAlign: 'center', fontSize: 30, paddingHorizontal: 20 }}>{translate( accountCreated ? "account_title_done" : "account_title")}</Text>
 				<View style={{ flexDirection: 'row', marginTop: 20 }}>
 					<View style={{ flex: 1 }} />
 					{accountCreated ?
@@ -448,23 +447,23 @@ class ModalScreen extends React.Component {
 									<Icon color={'white'} size={60} name="check-circle" />
 								</View>
 							</View>
-							<Text style={{ color: "white", textAlign: 'center', fontSize: 18 }}>Your account code is:</Text>
+							<Text style={{ color: "white", textAlign: 'center', fontSize: 18 }}>{translate("account_code")}</Text>
 							<Text style={{ color: "white", fontSize: 30, marginVertical: 10, textAlign: 'center' }}>{code.toString()}</Text>
-							<Text style={{ color: "white", paddingHorizontal: 5, textAlign: 'center', fontSize: 18 }}>You can share this code with others to access the same account</Text>
+							<Text style={{ color: "white", paddingHorizontal: 5, textAlign: 'center', fontSize: 18 }}>{translate("account_share")}</Text>
 							<TouchableNativeFeedback onPress={(event) => { this.props.navigation.state.params.onCodeCreated(code, password); this.props.navigation.goBack() }}
 								style={{ borderRadius: 20 }}>
 								<View style={{ alignItems: 'center', justifyContent: 'center', backgroundColor: BLU_LIGHT, paddingHorizontal: 20, borderRadius: 20, marginVertical: 20, paddingVertical: 10 }}>
-									<Text style={{ color: 'white' }}> LOG IN </Text>
+									<Text style={{ color: 'white' }}> {translate("account_button")} </Text>
 								</View>
 							</TouchableNativeFeedback>
 						</View> :
 						<View style={{ flex: 3 }}>
-							<Text style={{ color: "white" }}>Email</Text>
-							<TextInput editable={editable} onChangeText={(text) => this.setState({ email: text })} style={{ backgroundColor: 'white', borderRadius: 10, marginVertical: 5 }} keyboardType={'email-address'} value={this.state.email} placeholder={'Email'}></TextInput>
-							<Text style={{ color: "white", marginTop: 10 }}>Password</Text>
-							<TextInput editable={editable} onChangeText={(text) => this.setState({ password: text })} style={{ backgroundColor: 'white', borderRadius: 10, marginVertical: 5 }} secureTextEntry={true} value={this.state.password} placeholder={'Password'}></TextInput>
-							<Text style={{ color: "white", marginTop: 10 }}>Repeat Password</Text>
-							<TextInput editable={editable} onChangeText={(text) => this.setState({ repeatPassword: text })} style={{ backgroundColor: 'white', borderRadius: 10, marginVertical: 5 }} secureTextEntry={true} value={this.state.repeatPassword} placeholder={'Password'}></TextInput>
+							<Text style={{ color: "white" }}>{translate("account_email")}</Text>
+							<TextInput editable={editable} onChangeText={(text) => this.setState({ email: text })} style={{ backgroundColor: 'white', borderRadius: 10, marginVertical: 5 }} keyboardType={translate("account_email_hint")} value={this.state.email} placeholder={'Email'}></TextInput>
+							<Text style={{ color: "white", marginTop: 10 }}>{translate("account_password")}</Text>
+							<TextInput editable={editable} onChangeText={(text) => this.setState({ password: text })} style={{ backgroundColor: 'white', borderRadius: 10, marginVertical: 5 }} secureTextEntry={true} value={this.state.password} placeholder={translate("account_password_hint")}></TextInput>
+							<Text style={{ color: "white", marginTop: 10 }}> { translate("account_repeat_password")} </Text>
+							<TextInput editable={editable} onChangeText={(text) => this.setState({ repeatPassword: text })} style={{ backgroundColor: 'white', borderRadius: 10, marginVertical: 5 }} secureTextEntry={true} value={this.state.repeatPassword} placeholder={translate("account_repeat_password_hint")}></TextInput>
 							<TouchableNativeFeedback onPress={this.onSubmit.bind(this, this.state.email, this.state.password)}
 								style={{ borderRadius: 20 }}>
 								<View style={{ alignItems: 'center', justifyContent: 'center', backgroundColor: BLU_LIGHT, paddingHorizontal: 20, borderRadius: 20, marginVertical: 20, paddingVertical: 10 }}>
@@ -492,7 +491,7 @@ class ModalScreen extends React.Component {
 						})
 					}]
 				}]}>
-					<Text style={{ color: 'white', textAlign: 'center', padding: 10, flex: 1 }}>{errorMessage}</Text>
+					<Text style={{ color: 'white', textAlign: 'center', padding: 10, flex: 1 }}>{translate(errorMessage)}</Text>
 				</Animated.View>
 			</View>
 		);
