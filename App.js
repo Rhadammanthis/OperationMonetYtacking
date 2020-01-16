@@ -291,7 +291,7 @@ class Splash extends Component {
 				<View style={{ alignItems: 'center', justifyContent: 'center', }}>
 					<View style={{ backgroundColor: BLU, width: 160, height: 160, borderRadius: 80, borderColor: 'white', borderWidth: busy ? 0 : 4, alignItems: 'center', justifyContent: 'center' }}>
 						{busy ? <Progress.CircleSnail style={{ position: 'absolute' }} color={'white'} thickness={5} size={170} indeterminate={true} /> : null}
-						<Image resizeMode={'contain'} style={{ width: 150, height: 150, borderRadius: 90, position: "absolute" }} source={require('./img/logo.png')} />
+						<Image resizeMode={'contain'} style={{ width: 150, height: 150, borderRadius: 150, position: "absolute" }} source={require('./img/logo.png')} />
 					</View>
 					<Text style={{ color: 'white', fontSize: 25, fontWeight: 'bold', fontFamily: 'Roboto', marginTop: 10 }}> Spendless</Text>
 				</View>
