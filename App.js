@@ -29,7 +29,6 @@ import {
 	ReloadInstructions,
 } from 'react-native/Libraries/NewAppScreen';
 import { StackActions, createAppContainer, createStackNavigator, ScrollView } from "react-navigation";
-// import ActionButton from 'react-native-circular-action-menu';
 import ActionButton from 'react-native-action-button';
 import Icon from 'react-native-vector-icons/FontAwesome5';
 import Modal from 'react-native-modalbox';
@@ -40,20 +39,8 @@ import * as Progress from 'react-native-progress';
 import { PieChart } from 'react-native-svg-charts'
 import * as Data from './data/data'
 import Carousel from '@rhysforyou/react-native-carousel'
-import { translate } from "./src/translations/"
+import { translate, country } from "./src/localization"
 
-
-/**
- * CATEGORIES
- * 	Vegetables = vgt = #238364
- * 	Fruits = fts = #A02C2D
- * 	Dairy = dry = #FED797
- * 	Meath/Fish = mef = 9E6B55
- * 	Sweets = swt = #CA7E8D
- * 	Cereals = crl = #AF6E4E
- * 	Cleaning = cln = #5E96AE
- * 	Others = oth = #909090
- */
 
 var { height, width } = Dimensions.get('window');
 console.log('Height', height)
@@ -102,6 +89,8 @@ class Splash extends Component {
 		super(props)
 		//161943 H&K
 		this.state = { code: "", storedCode: null, settings: {}, animError: new Animated.Value(0), spinner: new Animated.Value(0), errorMessage: "", busy: false }
+
+		var didBlurSubscription
 	}
 
 	_storeData = async (code, password) => {
@@ -191,6 +180,13 @@ class Splash extends Component {
 
 	componentDidMount() {
 
+		this.didBlurSubscription = this.props.navigation.addListener(
+			'didFocus',
+			payload => {
+			  this.setState({ busy: false, code: ""})
+			}
+		  );
+
 
 		this._retrieveSettings()
 			.then((value) => this._retrieveData()
@@ -201,9 +197,12 @@ class Splash extends Component {
 				.catch(error => {
 					this.animateErrorMessage(error)
 				}))
-				.finally(() => this.setState({ busy: false}))
 			.catch((error) => this.props.navigation.navigate('Tutorial'))
 
+	}
+
+	componentWillUnmount(){
+		this.didBlurSubscription.remove()
 	}
 
 	onSubmit = (code, password) => {
@@ -383,7 +382,7 @@ class ModalScreen extends React.Component {
 
 
 					var code = Math.floor(100000 + Math.random() * 900000)
-					var userData = { email: email, dateCreated: new Date().getDate() }
+					var userData = { email: email, dateCreated: new Date().getTime(), country: country }
 
 					this.pushData(`/users/${code}/`, userData, () => {
 						backwardsAnimation.start()
@@ -806,41 +805,19 @@ class Main extends Component {
 
 	componentDidMount() {
 
-		// try {
-		// 	const value = AsyncStorage.getItem('@AccountCode:settings3');
-		// 	console.log("Settings", value)
-
-		// 	if (value === null)
-		// 		return Promise.reject(new Error("No data"))
-
-		// 	this.currency = value
-		// } catch (error) {
-		// 	// Error retrieving data
-		// 	return error
-		// }
-
-
-
-
 		this.backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
 
 			if (this.props.navigation.isFocused()) {
-				if (this.state.modalVisible) {
-					this.setState({ modalVisible: false })
+				if (this.state.showSummary) {
+					this.setState({ showSummary: false })
 					return true
 				}
-
-				if (this.state.open) {
-					this.expandPanel()
-					return true
+				else{
+					BackHandler.exitApp()
 				}
 			}
-
 		});
 
-
-
-		// this.setState({markedDates: this.markedDates})
 	}
 
 	componentWillUnmount() {

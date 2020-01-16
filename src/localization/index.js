@@ -16,7 +16,6 @@ const { languageTag, isRTL } =
 RNLocalize.findBestAvailableLanguage(Object.keys(translationGetters)) ||
 fallback;
 
-
 // update layout direction
 I18nManager.forceRTL(isRTL);
 // set i18n-js config
@@ -26,4 +25,5 @@ i18n.locale = languageTag;
 console.log("INITIALIZED")
 
 export const translate = (key, config) => i18n.t(key, config)
+export const country = RNLocalize.getCountry()
 
