@@ -12,6 +12,7 @@
     "firebase": "^6.4.2",
     "hoist-non-react-statics": "^3.3.0",
     "i18n-js": "^3.5.1",
+    "prop-types": "^15.7.2",
     "react": "16.8.6",
     "react-native": "0.60.5",
     "react-native-action-button": "^2.8.5",
