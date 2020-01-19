@@ -104,6 +104,11 @@ class Splash extends Component {
 		}
 	};
 
+	validateEmail = (email) => {
+		var re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+		return re.test(String(email).toLowerCase());
+	}
+
 	_retrieveData = async (code, password) => {
 		console.log("RETRIEVE DATA")
 		try {
@@ -123,15 +128,17 @@ class Splash extends Component {
 			this.setState({ busy: true, code: code })
 
 			try {
-				let snapshot = await firebase.database().ref(`/users/${code}/`).once('value');
 
-				// console.log(snapshot.val().email)
+				if (!this.validateEmail(code)) {
+					let snapshot = await firebase.database().ref(`/users/${code}/`).once('value');
 
-				if (snapshot.val() === null)
-					return Promise.reject(new Error("No data available using that code"))
+					if (snapshot.val() === null)
+						return Promise.reject("system_error_no_data")
 
-				const email = snapshot.val().email
-				console.log("password", password)
+					var email = snapshot.val().email
+				} else {
+					var email = code
+				}
 
 				let user = await firebase.auth().signInWithEmailAndPassword(email, password)
 					.catch((reason) => { return Promise.reject(reason.code) })
@@ -183,9 +190,9 @@ class Splash extends Component {
 		this.didBlurSubscription = this.props.navigation.addListener(
 			'didFocus',
 			payload => {
-			  this.setState({ busy: false, code: ""})
+				this.setState({ busy: false, code: "" })
 			}
-		  );
+		);
 
 
 		this._retrieveSettings()
@@ -201,7 +208,7 @@ class Splash extends Component {
 
 	}
 
-	componentWillUnmount(){
+	componentWillUnmount() {
 		this.didBlurSubscription.remove()
 	}
 
@@ -266,8 +273,8 @@ class Splash extends Component {
 			<View style={{ flexDirection: 'row', marginTop: 20 }}>
 				<View style={{ flex: 1 }} />
 				<View style={{ flex: 3 }}>
-					<TextInput onChangeText={(text) => this.setState({ code: text })} style={{ backgroundColor: 'white', borderRadius: 10, marginVertical: 10 }} keyboardType={'numeric'} value={this.state.code} placeholder={'Account Code'}></TextInput>
-					<TextInput onSubmitEditing={this.onSubmit.bind(this, code, password)} onChangeText={(text) => this.setState({ password: text })} style={{ backgroundColor: 'white', borderRadius: 10, marginVertical: 10 }} secureTextEntry={true} value={this.state.password} placeholder={'Password'}></TextInput>
+					<TextInput onChangeText={(text) => this.setState({ code: text })} style={{ backgroundColor: 'white', borderRadius: 10, marginVertical: 10 }} keyboardType={'numeric'} value={this.state.code} placeholder={translate("splash_user_name")}></TextInput>
+					<TextInput onSubmitEditing={this.onSubmit.bind(this, code, password)} onChangeText={(text) => this.setState({ password: text })} style={{ backgroundColor: 'white', borderRadius: 10, marginVertical: 10 }} secureTextEntry={true} value={this.state.password} placeholder={translate("splash_password")}></TextInput>
 					<TouchableNativeFeedback onPress={this.onSubmit.bind(this, code, password)}
 						style={{ borderRadius: 20 }}>
 						<View style={{ alignItems: 'center', justifyContent: 'center', backgroundColor: BLU_LIGHT, paddingHorizontal: 20, borderRadius: 20, marginVertical: 10, paddingVertical: 10 }}>
@@ -275,7 +282,7 @@ class Splash extends Component {
 						</View>
 					</TouchableNativeFeedback>
 					<TouchableNativeFeedback onPress={() => this.props.navigation.navigate('MyModal', { onCodeCreated: this.onCodeCreated })}>
-						<Text style={{ textDecorationLine: 'underline', color: BLU_LIGHT, textAlign: "center", marginVertical: 10 }}> Don't have an account? </Text>
+						<Text style={{ textDecorationLine: 'underline', color: BLU_LIGHT, textAlign: "center", marginVertical: 10 }}>{translate("splash_dont_have")} </Text>
 					</TouchableNativeFeedback>
 				</View>
 				<View style={{ flex: 1 }} />
@@ -378,38 +385,45 @@ class ModalScreen extends React.Component {
 			firebase.auth()
 				.createUserWithEmailAndPassword(email, password)
 				.then((value) => {
+					firebase.database().ref(`/users`).once('value')
+						.then((snap) => {
 
+							var userCodes = Object.keys(snap.val())
+							var code = Math.floor(100000 + Math.random() * 900000).toString()
 
-
-					var code = Math.floor(100000 + Math.random() * 900000)
-					var userData = { email: email, dateCreated: new Date().getTime(), country: country }
-
-					this.pushData(`/users/${code}/`, userData, () => {
-						backwardsAnimation.start()
-						LayoutAnimation.configureNext({
-							duration: 700,
-							create: {
-								type: LayoutAnimation.Types.spring,
-								property: LayoutAnimation.Properties.scaleXY,
-								springDamping: 1,
-								duration: 600
-							},
-							update: {
-								type: LayoutAnimation.Types.spring,
-								property: LayoutAnimation.Properties.scaleXY,
-								springDamping: 1,
-								duration: 600
-							},
-							delete: {
-								type: LayoutAnimation.Types.easeOut,
-								property: LayoutAnimation.Properties.opacity,
-								springDamping: 1,
-								duration: 400
+							while (userCodes.includes(code)) {
+								code = Math.floor(100000 + Math.random() * 900000).toString()
 							}
-						})
 
-						this.setState({ code: code })
-					})
+							var userData = { email: email, dateCreated: new Date().getTime(), country: country }
+
+							this.pushData(`/users/${code}/`, userData, () => {
+								backwardsAnimation.start()
+								LayoutAnimation.configureNext({
+									duration: 700,
+									create: {
+										type: LayoutAnimation.Types.spring,
+										property: LayoutAnimation.Properties.scaleXY,
+										springDamping: 1,
+										duration: 600
+									},
+									update: {
+										type: LayoutAnimation.Types.spring,
+										property: LayoutAnimation.Properties.scaleXY,
+										springDamping: 1,
+										duration: 600
+									},
+									delete: {
+										type: LayoutAnimation.Types.easeOut,
+										property: LayoutAnimation.Properties.opacity,
+										springDamping: 1,
+										duration: 400
+									}
+								})
+
+								this.setState({ code: code })
+							})
+						})
 				})
 				.catch((reason) => {
 					backwardsAnimation.start()
@@ -436,7 +450,7 @@ class ModalScreen extends React.Component {
 		var accountCreated = code !== null;
 		return (
 			<View style={{ flex: 1, backgroundColor: BLU, justifyContent: "center", alignItems: "center" }}>
-				<Text style={{ color: "white", textAlign: 'center', fontSize: 30, paddingHorizontal: 20 }}>{translate( accountCreated ? "account_title_done" : "account_title")}</Text>
+				<Text style={{ color: "white", textAlign: 'center', fontSize: 30, paddingHorizontal: 20 }}>{translate(accountCreated ? "account_title_done" : "account_title")}</Text>
 				<View style={{ flexDirection: 'row', marginTop: 20 }}>
 					<View style={{ flex: 1 }} />
 					{accountCreated ?
@@ -452,21 +466,21 @@ class ModalScreen extends React.Component {
 							<TouchableNativeFeedback onPress={(event) => { this.props.navigation.state.params.onCodeCreated(code, password); this.props.navigation.goBack() }}
 								style={{ borderRadius: 20 }}>
 								<View style={{ alignItems: 'center', justifyContent: 'center', backgroundColor: BLU_LIGHT, paddingHorizontal: 20, borderRadius: 20, marginVertical: 20, paddingVertical: 10 }}>
-									<Text style={{ color: 'white' }}> {translate("account_button")} </Text>
+									<Text style={{ color: 'white' }}> {translate("account_button_log_in")} </Text>
 								</View>
 							</TouchableNativeFeedback>
 						</View> :
 						<View style={{ flex: 3 }}>
 							<Text style={{ color: "white" }}>{translate("account_email")}</Text>
-							<TextInput editable={editable} onChangeText={(text) => this.setState({ email: text })} style={{ backgroundColor: 'white', borderRadius: 10, marginVertical: 5 }} keyboardType={translate("account_email_hint")} value={this.state.email} placeholder={'Email'}></TextInput>
+							<TextInput editable={editable} onChangeText={(text) => this.setState({ email: text })} style={{ backgroundColor: 'white', borderRadius: 10, marginVertical: 5 }} keyboardType={'email-address'} value={this.state.email} placeholder={translate("account_email_hint")}></TextInput>
 							<Text style={{ color: "white", marginTop: 10 }}>{translate("account_password")}</Text>
 							<TextInput editable={editable} onChangeText={(text) => this.setState({ password: text })} style={{ backgroundColor: 'white', borderRadius: 10, marginVertical: 5 }} secureTextEntry={true} value={this.state.password} placeholder={translate("account_password_hint")}></TextInput>
-							<Text style={{ color: "white", marginTop: 10 }}> { translate("account_repeat_password")} </Text>
+							<Text style={{ color: "white", marginTop: 10 }}> {translate("account_repeat_password")} </Text>
 							<TextInput editable={editable} onChangeText={(text) => this.setState({ repeatPassword: text })} style={{ backgroundColor: 'white', borderRadius: 10, marginVertical: 5 }} secureTextEntry={true} value={this.state.repeatPassword} placeholder={translate("account_repeat_password_hint")}></TextInput>
 							<TouchableNativeFeedback onPress={this.onSubmit.bind(this, this.state.email, this.state.password)}
 								style={{ borderRadius: 20 }}>
 								<View style={{ alignItems: 'center', justifyContent: 'center', backgroundColor: BLU_LIGHT, paddingHorizontal: 20, borderRadius: 20, marginVertical: 20, paddingVertical: 10 }}>
-									<Text style={{ color: 'white' }}> Sign Up </Text>
+									<Text style={{ color: 'white' }}> {translate("account_button_sign_up")}</Text>
 								</View>
 							</TouchableNativeFeedback>
 						</View>}
@@ -812,7 +826,7 @@ class Main extends Component {
 					this.setState({ showSummary: false })
 					return true
 				}
-				else{
+				else {
 					BackHandler.exitApp()
 				}
 			}
@@ -1293,22 +1307,22 @@ class Profile extends Component {
 	render() {
 		return (
 			<View style={{ flex: 1, flexDirection: 'column', backgroundColor: BLU, paddingHorizontal: 20 }}>
-				<Text style={{ color: 'white', fontSize: 35, marginVertical: 20 }}>Profile</Text>
-				<Text style={{ color: 'white', fontSize: 20 }}>Account Email</Text>
+				<Text style={{ color: 'white', fontSize: 35, marginVertical: 20 }}>{translate("profile_title")}</Text>
+				<Text style={{ color: 'white', fontSize: 20 }}>{translate("profile_email")}</Text>
 				<Text style={{ color: 'white', fontSize: 17 }}>{this.user.email}</Text>
-				<Text style={{ color: 'white', fontSize: 20, marginTop: 10 }}>Account Code</Text>
+				<Text style={{ color: 'white', fontSize: 20, marginTop: 10 }}>{translate("profile_account")}</Text>
 				<Text style={{ color: 'white', fontSize: 17 }}>{this.code}</Text>
 				<View style={{ flex: 1 }} />
 				<TouchableNativeFeedback onPress={(event) => {
 					firebase.auth().signOut()
-						.then((value) => { 
-							AsyncStorage.multiRemove(["@persistentItem:password","@persistentItem:code"])
-							.then((value) => { this.props.navigation.dispatch(StackActions.popToTop()) }) 
+						.then((value) => {
+							AsyncStorage.multiRemove(["@persistentItem:password", "@persistentItem:code"])
+								.then((value) => { this.props.navigation.dispatch(StackActions.popToTop()) })
 						})
 				}}
 					style={{ borderRadius: 20 }}>
 					<View style={{ alignItems: 'center', justifyContent: 'center', backgroundColor: "#AA3C3B", paddingHorizontal: 20, borderRadius: 20, marginVertical: 20, paddingVertical: 10 }}>
-						<Text style={{ color: 'white' }}> Log out </Text>
+						<Text style={{ color: 'white' }}>{translate("profile_button_log_out")}</Text>
 					</View>
 				</TouchableNativeFeedback>
 			</View>
