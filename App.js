@@ -273,7 +273,7 @@ class Splash extends Component {
 			<View style={{ flexDirection: 'row', marginTop: 20 }}>
 				<View style={{ flex: 1 }} />
 				<View style={{ flex: 3 }}>
-					<TextInput onChangeText={(text) => this.setState({ code: text })} style={{ backgroundColor: 'white', borderRadius: 10, marginVertical: 10 }} keyboardType={'numeric'} value={this.state.code} placeholder={translate("splash_user_name")}></TextInput>
+					<TextInput onChangeText={(text) => this.setState({ code: text })} style={{ backgroundColor: 'white', borderRadius: 10, marginVertical: 10 }} value={this.state.code} placeholder={translate("splash_user_name")}></TextInput>
 					<TextInput onSubmitEditing={this.onSubmit.bind(this, code, password)} onChangeText={(text) => this.setState({ password: text })} style={{ backgroundColor: 'white', borderRadius: 10, marginVertical: 10 }} secureTextEntry={true} value={this.state.password} placeholder={translate("splash_password")}></TextInput>
 					<TouchableNativeFeedback onPress={this.onSubmit.bind(this, code, password)}
 						style={{ borderRadius: 20 }}>
