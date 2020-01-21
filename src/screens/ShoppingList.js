@@ -4,13 +4,13 @@ import {
     View, Text,
     FlatList, StyleSheet,
     TextInput, Animated,
-
 } from 'react-native';
 import ActionButton from 'react-native-action-button';
 import Icon from 'react-native-vector-icons/FontAwesome5';
 import firebase from 'firebase';
 import { SPENDLESS_BLUE, SPENDLESS_LIGHT_BLUE } from "../data/consts"
 import LocalizedText from "../components/LocalizedText"
+import { translate } from '../localization';
 
 class ShoppingList extends Component {
     constructor(props) {
@@ -132,7 +132,7 @@ class ShoppingList extends Component {
 
     render() {
         return (
-            <View style={{ flex: 1, flexDirection: 'column', backgroundColor: BLU }}>
+            <View style={{ flex: 1, flexDirection: 'column', backgroundColor: SPENDLESS_BLUE }}>
                 <LocalizedText localizationKey={"shopping_list_title"} allowFontScaling style={{ color: 'white', fontSize: 40, margin: 20, paddingRight: 45 }} />
                 {this._renderShoppingList(this.shoppingList)}
                 <View style={{ flex: 1 }} />
@@ -148,7 +148,7 @@ class ShoppingList extends Component {
                         renderIcon={(active) => {
                             return <Icon color={'white'} size={15} name="plus" />
                         }}
-                        spacing={15} offsetX={10} offsetY={5} fixNativeFeedbackRadius={true} size={40} buttonColor={BLU_LIGHT}>
+                        spacing={15} offsetX={10} offsetY={5} fixNativeFeedbackRadius={true} size={40} buttonColor={SPENDLESS_LIGHT_BLUE}>
                     </ActionButton>
                 </View>
                 <ActionButton onPress={() => {

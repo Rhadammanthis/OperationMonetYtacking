@@ -4,6 +4,7 @@ export const countries = [
         name: 'Australia',
         currency: 'AUD',
         currency_name: 'Dollar',
+        symbol: '$',
         image: require('../../img/au.png')
     },
     {
@@ -11,6 +12,7 @@ export const countries = [
         name: 'Brazil',
         currency: 'BRL',
         currency_name: 'Real',
+        symbol: 'R$',
         image: require('../../img/br.png')
     },
     {
@@ -18,6 +20,7 @@ export const countries = [
         name: 'Canada',
         currency: 'USD',
         currency_name: 'Dollar',
+        symbol: '$',
         image: require('../../img/ca.png')
     },
     {
@@ -25,6 +28,7 @@ export const countries = [
         name: 'Chile',
         currency: 'CLP',
         currency_name: 'Peso',
+        symbol: '$',
         image: require('../../img/cl.png')
     },
     {
@@ -32,6 +36,7 @@ export const countries = [
         name: 'China',
         currency: 'CNY',
         currency_name: 'Renminbi',
+        symbol: '¥',
         image: require('../../img/cn.png')
     },
     {
@@ -39,6 +44,7 @@ export const countries = [
         name: 'Colombia',
         currency: 'COL',
         currency_name: 'Peso',
+        symbol: '$',
         image: require('../../img/co.png')
     },
     {
@@ -46,6 +52,7 @@ export const countries = [
         name: 'Czechia',
         currency: 'CZK',
         currency_name: 'Koruna',
+        symbol: 'Kč',
         image: require('../../img/cz.png')
     },
     {
@@ -53,6 +60,7 @@ export const countries = [
         name: 'Denmark',
         currency: 'DKK',
         currency_name: 'Krone',
+        symbol: 'kr',
         image: require('../../img/dk.png')
     },
     {
@@ -60,6 +68,7 @@ export const countries = [
         name: 'European Union',
         currency: 'EUR',
         currency_name: 'Euro',
+        symbol: '€',
         image: require('../../img/eu.png')
     },
     {
@@ -67,6 +76,7 @@ export const countries = [
         name: 'Great Britain',
         currency: 'GBP',
         currency_name: 'Pound Sterling',
+        symbol: '£',
         image: require('../../img/gb.png')
     },
     {
@@ -74,6 +84,7 @@ export const countries = [
         name: 'Hong Kong',
         currency: 'HKD',
         currency_name: 'Dollar',
+        symbol: '$',
         image: require('../../img/hk.png')
     },
     {
@@ -81,6 +92,7 @@ export const countries = [
         name: 'Hungary',
         currency: 'HUF',
         currency_name: 'Forint',
+        symbol: 'Ft',
         image: require('../../img/hu.png')
     },
     {
@@ -88,6 +100,7 @@ export const countries = [
         name: 'Iceland',
         currency: 'ISK',
         currency_name: 'Krona',
+        symbol: 'kr',
         image: require('../../img/is.png')
     },
     {
@@ -95,6 +108,7 @@ export const countries = [
         name: 'India',
         currency: 'INR',
         currency_name: 'Rupee',
+        symbol: '₹',
         image: require('../../img/in.png')
     },
     {
@@ -102,12 +116,14 @@ export const countries = [
         name: 'Indonesia',
         currency: 'IDR',
         currency_name: 'Rupiah',
+        symbol: 'Rp',
         image: require('../../img/id.png')
     }, {
         id: 'il',
         name: 'Israel',
         currency: 'ILS',
         currency_name: 'New Shekel',
+        symbol: '₪',
         image: require('../../img/il.png')
     },
     {
@@ -115,6 +131,7 @@ export const countries = [
         name: 'Japan',
         currency: 'JPY',
         currency_name: 'Yen',
+        symbol: '¥',
         image: require('../../img/jp.png')
     },
     {
@@ -122,6 +139,7 @@ export const countries = [
         name: 'Malaysia',
         currency: 'MYR',
         currency_name: 'Ringgit',
+        symbol: 'RM',
         image: require('../../img/my.png')
     },
     {
@@ -129,6 +147,7 @@ export const countries = [
         name: 'Mexico',
         currency: 'MXN',
         currency_name: 'Peso',
+        symbol: '$',
         image: require('../../img/mx.png')
     },
     {
@@ -136,6 +155,7 @@ export const countries = [
         name: 'New Zeland',
         currency: 'NZD',
         currency_name: 'Dollar',
+        symbol: '$',
         image: require('../../img/nz.png')
     },
     {
@@ -143,6 +163,7 @@ export const countries = [
         name: 'Norway',
         currency: 'NOK',
         currency_name: 'Krone',
+        symbol: 'kr',
         image: require('../../img/no.png')
     },
     {
@@ -150,6 +171,7 @@ export const countries = [
         name: 'The Phillipines',
         currency: 'PHP',
         currency_name: 'Peso',
+        symbol: '₱',
         image: require('../../img/ph.png')
     },
     {
@@ -157,6 +179,7 @@ export const countries = [
         name: 'Poland',
         currency: 'PLN',
         currency_name: 'Zloty',
+        symbol: 'zł',
         image: require('../../img/pl.png')
     },
     {
@@ -164,12 +187,14 @@ export const countries = [
         name: 'Romania',
         currency: 'RON',
         currency_name: 'Leu',
+        symbol: 'lei',
         image: require('../../img/ro.png')
     }, {
         id: 'ru',
         name: 'Russia',
         currency: 'RUB',
         currency_name: 'Ruble',
+        symbol: '₽',
         image: require('../../img/ru.png')
     },
     {
@@ -177,6 +202,7 @@ export const countries = [
         name: 'Saudi Arabia',
         currency: 'SAR',
         currency_name: 'Riyal',
+        symbol: '﷼',
         image: require('../../img/sa.png')
     },
     {
@@ -184,6 +210,7 @@ export const countries = [
         name: 'Singapore',
         currency: 'SGD',
         currency_name: 'Dollar',
+        symbol: '$',
         image: require('../../img/sg.png')
     },
     {
@@ -191,12 +218,14 @@ export const countries = [
         name: 'South Africa',
         currency: 'ZAR',
         currency_name: 'Rand',
+        symbol: 'R',
         image: require('../../img/za.png')
     }, {
         id: 'kr',
         name: 'South Korea',
         currency: 'KRW',
         currency_name: 'Won',
+        symbol: '₩',
         image: require('../../img/kr.png')
     },
     {
@@ -204,6 +233,7 @@ export const countries = [
         name: 'Sweden',
         currency: 'SEK',
         currency_name: 'Krona',
+        symbol: 'kr',
         image: require('../../img/se.png')
     },
     {
@@ -211,6 +241,7 @@ export const countries = [
         name: 'Switzerland',
         currency: 'CHF',
         currency_name: 'Franc',
+        symbol: 'CHF',
         image: require('../../img/ch.png')
     },
     {
@@ -218,12 +249,14 @@ export const countries = [
         name: 'Taiwan',
         currency: 'TWD',
         currency_name: 'Dollar',
+        symbol: 'NT$',
         image: require('../../img/tw.png')
     }, {
         id: 'th',
         name: 'Thailand',
         currency: 'THB',
         currency_name: 'Baht',
+        symbol: '฿',
         image: require('../../img/th.png')
     },
     {
@@ -231,6 +264,7 @@ export const countries = [
         name: 'Turkey',
         currency: 'TRY',
         currency_name: 'Lira',
+        symbol: '₺',
         image: require('../../img/tr.png')
     },
     {
@@ -238,6 +272,7 @@ export const countries = [
         name: 'United Arab Emirates',
         currency: 'AED',
         currency_name: 'Dirham',
+        symbol: 'د.إ',
         image: require('../../img/ae.png')
     },
     {
@@ -245,6 +280,7 @@ export const countries = [
         name: 'United States of America',
         currency: 'USD',
         currency_name: 'Dollar',
+        symbol: '$',
         image: require('../../img/us.png')
     }
 ]

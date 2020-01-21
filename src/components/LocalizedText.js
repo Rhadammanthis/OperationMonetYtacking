@@ -5,7 +5,7 @@ import PropTypes from 'prop-types'
 
 class LocalizedText extends Component{
     render() {
-        return <Text {...this.props} style={this.props.style}>{translate(this.props.localizationKey)}</Text>;
+        return <Text {...this.props} style={this.props.style}>{translate(this.props.localizationKey)} {this.props.children}</Text>;
       }
 }
 

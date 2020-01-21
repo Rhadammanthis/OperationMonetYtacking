@@ -1,9 +1,7 @@
 import React, { Component } from 'react';
 import {
-
-    StyleSheet,
     TouchableNativeFeedback,
-    View, Text,
+    View, Text, TextInput,
     StyleSheet, Animated,
     LayoutAnimation
 } from 'react-native';

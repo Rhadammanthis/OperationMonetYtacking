@@ -214,7 +214,7 @@ class Splash extends Component {
 						})
 					}]
 				}]}>
-					<LocalizedText localizationKey={"errorMessage"} style={styles.errorMessage} />
+					<LocalizedText localizationKey={errorMessage} style={styles.errorMessage} />
 				</Animated.View>
 			</View>
 		)
