@@ -40,6 +40,7 @@ import Draggable from './src/components/Draggable'
 import { applyMoneyMask, HEIGHT, WIDTH, SPENDLESS_BLUE, SPENDLESS_LIGHT_BLUE } from './src/data/consts';
 import LocalizedText from './src/components/LocalizedText';
 import { getColor, Categories, getName, getIcon } from './src/data/categories';
+import DataStore from './src/data/dataStore';
 
 
 
@@ -50,11 +51,9 @@ class Main extends Component {
 	constructor(props) {
 		super(props);
 
-		console.log("I GOT TO MAIN")
-
 		this.state = {
 			selectedDay: null, modalVisible: false, catSelected: "vgt",
-			amount: null, dayExpenses: [], refresh: false, renderTotal: false, anim: new Animated.Value(0),
+			amount: null, refresh: false, renderTotal: false, anim: new Animated.Value(0),
 			open: false, showSummary: false, lastDay: null, top: Math.floor(HEIGHT / 2), selectedSlice: {
 				label: 'vgt', value: 0
 			}, labelWidth: 0
@@ -70,31 +69,21 @@ class Main extends Component {
 			translate("system_wednesday_short"), translate("system_thursday_short"), translate("system_friday_short"), translate("system_saturday_short")],
 			today: 'Aujourd\'hui'
 		};
-
 		LocaleConfig.defaultLocale = 'es';
 
 		const { navigation } = this.props;
-		this.data = navigation.getParam('moneyData', null).expenses;
+		
+		let data = navigation.getParam('moneyData', null).expenses;
 		this.shopping = navigation.getParam('moneyData', null).shopping;
 		this.code = navigation.getParam('code', null);
 		this.currency = navigation.getParam('currency', null);
-		this.markedDates = {}
-		Object.keys(this.data).map((day, i) => {
-			this.markedDates[day] = { marked: true }
-		})
+		
+		this.dataStore = new DataStore(data, this.code)
 
 		this.currentMonth = new Date().toISOString().substring(0, 7)
-
-
-		console.log("Data", this.data)
-
-		this.dataSet = null
-
 		this.statusBarTheme = Platform.OS === 'android' ? 'light-content' : 'dark-content'
 
 		StatusBar.setBackgroundColor("#005577", true)
-
-		this.animatedOffset = new Animated.Value(0)
 	}
 
 	componentDidMount() {
@@ -139,39 +128,12 @@ class Main extends Component {
 			}
 		})
 
-		this.markedDates = { ...this.markedDates, [dateString]: { ...this.markedDates[dateString], selected: true, disableTouchEvent: false } }
-
-		if (this.state.selectedDay !== null)
-			this.markedDates = { ...this.markedDates, [this.state.selectedDay]: { ...this.markedDates[this.state.selectedDay], selected: false, disableTouchEvent: false } }
-
+		this.dataStore.selectDay(dateString)
 		this.setState({ selectedDay: dateString })
-		this.parseTableData(dateString)
-	}
-
-	parseTableData = (dayString) => {
-
-		if (this.data[dayString] == null)
-			return this.setState({ dayExpenses: [] })
-
-		let dayData = dayString ? this.data[dayString].expenses || null : null
-
-		this.setState({
-			dayExpenses: dayData ? Object.keys(dayData).map((key, index) => {
-				return { key: key, amount: dayData[key] }
-			}) : null
-		})
 	}
 
 	onUpdated = (cat, amount) => {
-		if (amount <= 0) {
-			delete this.data[this.state.selectedDay].expenses[cat]
-			this.markedDates = { ...this.markedDates, [this.state.selectedDay]: { ...this.markedDates[this.state.selectedDay], marked: false } }
-		}
-		else
-			this.data[this.state.selectedDay].expenses[cat] = amount
-
-		this.pushData(this.data)
-		this.parseTableData(this.state.selectedDay)
+		this.dataStore.updateDaysData(this.state.selectedDay, cat, amount)
 		this.forceUpdate()
 	}
 
@@ -190,6 +152,11 @@ class Main extends Component {
 						textContainerStyle={{ borderRadius: 5, backgroundColor: getColor(Categories.Fruits), borderColor: getColor(Categories.Fruits) }}
 						buttonColor={getColor(Categories.Fruits)} title={getName(Categories.Fruits)} onPress={this.categoryButtonPressed.bind(this, Categories.Fruits)}>
 						<Icon size={20} name={getIcon(Categories.Fruits)} color={'white'} />
+					</ActionButton.Item>
+					<ActionButton.Item textStyle={{ color: 'white' }}
+						textContainerStyle={{ borderRadius: 5, backgroundColor: getColor(Categories.Dairy), borderColor: getColor(Categories.Dairy) }}
+						buttonColor={getColor(Categories.Dairy)} title={getName(Categories.Dairy)} onPress={this.categoryButtonPressed.bind(this, Categories.Dairy)}>
+						<Icon size={20} name={getIcon(Categories.Dairy)} color={'white'} />
 					</ActionButton.Item>
 					<ActionButton.Item textStyle={{ color: 'white' }}
 						textContainerStyle={{ borderRadius: 5, backgroundColor: getColor(Categories.Meet), borderColor: getColor(Categories.Meet) }}
@@ -224,38 +191,26 @@ class Main extends Component {
 
 	_renderSummaryModal = (currentMonth) => {
 
-		let totals = {}, total = 0
 
-		Object.keys(this.data).map((day, i) => {
-
-			if (day.indexOf(currentMonth) == -1)
-				return null
-
-			Object.keys(this.data[day].expenses).map((category, i) => {
-				totals[category] = totals[category] || 0
-				totals[category] += this.data[day].expenses[category]
-			})
-		})
-
-		console.log("TOTALS 2", totals)
+		let monthCategoriesTotalsArray = this.dataStore.getMontsCategoriesTotals(currentMonth)
+		let monthsTotal = this.dataStore.getMontsTotal(currentMonth)
 
 		//To prevent excessive state updates
 		if (this.state.showSummary === true && this.state.selectedSlice.value === 0)
-			this.setState({ selectedSlice: { value: applyMoneyMask(totals.vgt), label: 'vgt' } })
+			this.setState({ selectedSlice: { value: applyMoneyMask(monthCategoriesTotalsArray.vgt), label: 'vgt' } })
 
 		const { selectedSlice } = this.state;
 		const { label, value } = selectedSlice;
 
-		const data = Object.keys(totals).map((key, index) => {
-			total += totals[key]
+		const pieChartData = Object.keys(monthCategoriesTotalsArray).map((key, index) => {
 			return {
 				key,
-				value: totals[key],
+				value: monthCategoriesTotalsArray[key],
 				svg: { fill: getColor(key) },
 				arc: { outerRadius: '90%', padAngle: label === key ? 0.05 : 0 },
 				onPress: () => {
 					LayoutAnimation.configureNext(LayoutAnimation.Presets.spring);
-					this.setState({ selectedSlice: { label: key, value: applyMoneyMask(totals[key]) } })
+					this.setState({ selectedSlice: { label: key, value: applyMoneyMask(monthCategoriesTotalsArray[key]) } })
 				}
 			}
 		})
@@ -263,13 +218,13 @@ class Main extends Component {
 		_renderPieChart = () => {
 
 			return (
-				total > 0 ?
+				monthsTotal > 0 ?
 					<View style={{ justifyContent: 'center', flex: 1 }}>
 						<PieChart
 							style={{ height: HEIGHT * 0.45 }}
 							outerRadius={'85%'}
 							innerRadius={'55%'}
-							data={data}
+							data={pieChartData}
 						/>
 						<View style={{
 							left: (350 / 2 - (WIDTH * 0.150)), position: 'absolute', width: WIDTH * 0.3, height: WIDTH * 0.3,
@@ -303,7 +258,7 @@ class Main extends Component {
 					{_renderPieChart()}
 				</View>
 				<Text style={{ textAlign: 'center', fontWeight: 'bold', fontSize: 20, color: 'white', borderBottomLeftRadius: 10, borderBottomRightRadius: 10, backgroundColor: SPENDLESS_BLUE, justifyContent: 'center', alignItems: 'center', paddingVertical: 10 }}>
-					{translate("main_monthly_summary_total")} {applyMoneyMask(total)} {this.currency}
+					{translate("main_monthly_summary_total")} {applyMoneyMask(monthsTotal)} {this.currency}
 				</Text>
 			</Modal>
 		)
@@ -319,16 +274,12 @@ class Main extends Component {
 	}
 
 	_renderDayTotal = () => {
-		if (this.state.dayExpenses.length > 0) {
 
-			let dailyExpensesSum = 0
+		var daysTotal = this.dataStore.getDaysTotal()
 
-			for (let index = 0; index < this.state.dayExpenses.length; index++) {
-				dailyExpensesSum += this.state.dayExpenses[index].amount
-			}
-
+		if (daysTotal) {
 			return (
-				<LocalizedText localizationKey={"main_day_total"} style={{ color: 'white', fontWeight: 'bold', fontSize: 17 }}> {applyMoneyMask(dailyExpensesSum)} {this.currency}</LocalizedText>
+				<LocalizedText localizationKey={"main_day_total"} style={{ color: 'white', fontWeight: 'bold', fontSize: 17 }}> {applyMoneyMask(daysTotal)} {this.currency}</LocalizedText>
 			)
 		}
 
@@ -336,7 +287,8 @@ class Main extends Component {
 	}
 
 	pushData = async (data) => {
-		let snapshot = await firebase.database().ref(`/${this.props.navigation.getParam('code', null)}/expenses`).update(data)
+		console.log("Data pushed!")
+		//let snapshot = await firebase.database().ref(`/${this.props.navigation.getParam('code', null)}/expenses`).update(data)
 	}
 
 	updateCurrentMonth = (date) => {
@@ -364,7 +316,7 @@ class Main extends Component {
 					onMonthChange={(date) => { this.updateCurrentMonth(date) }}
 					monthFormat={'MMMM'}
 					onDayPress={(day) => { this._ondDayPressed(day.dateString) }}
-					markedDates={this.markedDates}
+					markedDates={this.dataStore.markedDates}
 				/>
 
 				<Draggable style={{
@@ -373,13 +325,13 @@ class Main extends Component {
 					<FlatGrid
 						style={{ flex: 1 }}
 						itemDimension={(WIDTH - 50) / 3}
-						items={this.state.dayExpenses}
+						items={this.dataStore.dayExpenses}
 						renderItem={({ item, index }) => (
 							<ExpensesItem item={item} index={index}
 								onPress={() => { this.categoryButtonPressed(item.key) }}
 								navigation={this.props.navigation}
 								currency={this.currency}
-								history={this.data[this.state.selectedDay].history[item.key]}
+								history={this.dataStore.history[item.key]}
 								onUpdated={this.onUpdated} />)
 						} />
 					<View style={{ backgroundColor: '#005577', width: WIDTH, alignItems: 'center', justifyContent: 'center', height: 70 }}>
@@ -406,28 +358,9 @@ class Main extends Component {
 						<View style={{ flex: 1 }} />
 						<Button onPress={() => {
 
-							if (this.state.amount === null)
-								return
-
-							console.log("Data", this.data)
-
-							//Add money to category
-							this.data[this.state.selectedDay] = this.data[this.state.selectedDay] || { expenses: {}, history: {} }
-							this.data[this.state.selectedDay].expenses[this.state.catSelected] = this.data[this.state.selectedDay].expenses[this.state.catSelected] || 0
-							this.data[this.state.selectedDay].expenses[this.state.catSelected] += parseInt(this.state.amount)
-							this.parseTableData(this.state.selectedDay)
-
-							//Add transaction to history
-							this.data[this.state.selectedDay].history = this.data[this.state.selectedDay].history || {}
-							this.data[this.state.selectedDay].history[this.state.catSelected] = this.data[this.state.selectedDay].history[this.state.catSelected] || []
-							this.data[this.state.selectedDay].history[this.state.catSelected].push({ amount: parseInt(this.state.amount), date: Date.now() })
-
-							this.markedDates = { ...this.markedDates, [this.state.selectedDay]: { ...this.markedDates[this.state.selectedDay], marked: true } }
-
-							this.pushData(this.data)
-							this.setState({ amount: "" })
-
+							this.dataStore.addExpense(this.state.selectedDay, this.state.catSelected, this.state.amount)
 							this.setModalVisible(!this.state.modalVisible)
+
 						}} style={{
 							color: "white",
 							padding: 10

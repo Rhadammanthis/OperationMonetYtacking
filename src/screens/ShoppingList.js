@@ -10,6 +10,7 @@ import Icon from 'react-native-vector-icons/FontAwesome5';
 import firebase from 'firebase';
 import { SPENDLESS_BLUE, SPENDLESS_LIGHT_BLUE } from "../data/consts"
 import LocalizedText from "../components/LocalizedText"
+import Pusher from '../data/pusher'
 import { translate } from '../localization';
 
 class ShoppingList extends Component {
@@ -17,22 +18,24 @@ class ShoppingList extends Component {
         super(props)
         this.state = { refresh: false, extraItemText: "" }
         this.code = this.props.navigation.getParam('code', null)
+
+        this.pusher = new Pusher(this.code)
+
+        console.log("IN SHOP")
     }
 
     componentDidMount() {
 
-        this.fetchData().then((shoppingList) => { this.shoppingList = shoppingList; this.forceUpdate(); }).catch((error) => console.log("error", error))
+        this.pusher.fetchShoppingList()
+            .then((list) => {
+                console.log("LIST", list)
+                this.shoppingList = list;
+                this.forceUpdate();
+            })
+            .catch((reason) => {
+                console.log("Error", reason)
+            })
 
-    }
-
-    pushData = async (ref, value) => {
-        console.log(ref)
-        let snapshot = await firebase.database().ref(ref).set(value)
-    }
-
-    updateData = async (ref, value) => {
-        console.log(ref)
-        let snapshot = await firebase.database().ref(ref).update(value)
     }
 
     fetchData = async () => {
@@ -94,11 +97,11 @@ class ShoppingList extends Component {
                     <TouchableNativeFeedback onPress={(evt) => {
                         setActive(!active);
                         this.shoppingList[index].active = !active;
-                        this.updateData(`/${this.code}/shopping/${index}/`, { active: !active })
+                        this.pusher.updateShoppingList(index, { active: !active })
                     }}>
                         <View style={[styles.checkBox, { backgroundColor: active ? SPENDLESS_LIGHT_BLUE : SPENDLESS_BLUE }]}></View>
                     </TouchableNativeFeedback>
-                    <TouchableNativeFeedback onPress={() => { animation.start(); setTimeout(() => { reverseAnimation.start() }, 3000) }}>
+                    <TouchableNativeFeedback onPress={() => { animation.start(); setTimeout(() => { reverseAnimation.start() }, 2000) }}>
                         <Text style={styles.item}> {title} </Text>
                     </TouchableNativeFeedback>
                 </View>
@@ -106,7 +109,7 @@ class ShoppingList extends Component {
                     <TouchableNativeFeedback onPress={(evt) => {
                         console.log(`${index} should be deleted`); this.shoppingList.splice(index, 1);
                         this.setState({ refresh: !this.state.refresh });
-                        this.pushData(`/${this.code}/shopping/`, this.shoppingList)
+                        this.pusher.pushShoppingList(this.shoppingList)
                     }}>
                         <Icon color={'white'} size={20} name="times-circle" />
                     </TouchableNativeFeedback>
@@ -143,7 +146,7 @@ class ShoppingList extends Component {
                         this.shoppingList = this.shoppingList || []
                         this.shoppingList.push({ title: this.state.extraItemText, active: false });
                         this.setState({ refresh: !this.state.refresh, extraItemText: "" });
-                        this.pushData(`/${this.code}/shopping/`, this.shoppingList)
+                        this.pusher.pushShoppingList(this.shoppingList)
                     }}
                         renderIcon={(active) => {
                             return <Icon color={'white'} size={15} name="plus" />
@@ -154,7 +157,7 @@ class ShoppingList extends Component {
                 <ActionButton onPress={() => {
                     this.shoppingList = []
                     this.setState({ refresh: !this.state.refresh });
-                    this.pushData(`/${this.code}/shopping/`, this.shoppingList)
+                    this.pusher.pushShoppingList(this.shoppingList)
                 }}
                     renderIcon={(active) => {
                         return <Icon color={'white'} size={20} name="trash-alt" />
