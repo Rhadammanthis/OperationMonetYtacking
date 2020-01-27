@@ -33,7 +33,7 @@ class History extends Component {
     }
 
     componentDidMount() {
-        StatusBar.setBackgroundColor(this.cat, true)
+        StatusBar.setBackgroundColor(getColor(this.category), true)
 
         BackHandler.addEventListener('hardwareBackPress', () => {
             StatusBar.setBackgroundColor(SPENDLESS_BLUE, true)
@@ -73,7 +73,7 @@ class History extends Component {
         return (
             <View style={{ flex: 1, flexDirection: 'column', backgroundColor: getColor(this.category) }}>
                 <View style={{ flexDirection: 'row', padding: 20 }}>
-                    <Transition shared={this.icon}>
+                    <Transition shared={getIcon(this.category)}>
                         <Animated.View style={[styles.icon, { backgroundColor: getColor(this.category) }]}>
                             <Icon size={35} color={'white'} name={getIcon(this.category)} />
                         </Animated.View>
