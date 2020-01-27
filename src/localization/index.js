@@ -6,7 +6,8 @@ console.log("TRANSLATION FLOW")
 
 const translationGetters = {
 	en: () => require("./en.json"),
-	es: () => require("./es.json")
+	es: () => require("./es.json"),
+	pl: () => require("./pl.json")
 }
 
 // fallback if no available language fits
@@ -23,6 +24,7 @@ i18n.translations = { [languageTag]: translationGetters[languageTag]() };
 i18n.locale = languageTag;
 
 console.log("INITIALIZED")
+console.log("Language Tag",languageTag)
 
 export const translate = (key, config) => i18n.t(key, config)
 export const country = RNLocalize.getCountry()

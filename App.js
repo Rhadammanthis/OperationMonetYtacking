@@ -42,8 +42,6 @@ import LocalizedText from './src/components/LocalizedText';
 import { getColor, Categories, getName, getIcon } from './src/data/categories';
 import DataStore from './src/data/dataStore';
 
-
-
 const calendarDayTextSize = HEIGHT < 600 ? 14 : 15
 const calendarMonthTextSize = HEIGHT < 600 ? 20 : 30
 
@@ -95,7 +93,7 @@ class Main extends Component {
 					this.setState({ showSummary: false })
 					return true
 				}
-				else{
+				else {
 					BackHandler.exitApp()
 				}
 			}
@@ -190,7 +188,6 @@ class Main extends Component {
 	}
 
 	_renderSummaryModal = (currentMonth) => {
-
 
 		let monthCategoriesTotalsArray = this.dataStore.getMontsCategoriesTotals(currentMonth)
 		let monthsTotal = this.dataStore.getMontsTotal(currentMonth)
