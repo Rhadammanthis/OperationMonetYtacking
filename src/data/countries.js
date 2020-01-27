@@ -18,7 +18,7 @@ export const countries = [
     {
         id: 'ca',
         name: 'Canada',
-        currency: 'USD',
+        currency: 'CAD',
         currency_name: 'Dollar',
         symbol: '$',
         image: require('../../img/ca.png')
@@ -99,7 +99,7 @@ export const countries = [
         id: 'is',
         name: 'Iceland',
         currency: 'ISK',
-        currency_name: 'Krona',
+        currency_name: 'Króna',
         symbol: 'kr',
         image: require('../../img/is.png')
     },

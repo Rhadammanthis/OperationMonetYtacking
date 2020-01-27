@@ -43,10 +43,10 @@ class Currency extends Component {
                 <View style={[styles.countryContainer, country.id === selectedCountry.id ? selected : {}]}>
                     <Image style={{ width: 40, height: 40 }} source={country.image} />
                     <View style={{ justifyContent: 'center', alignItems: 'center', marginHorizontal: 15 }}>
-                        <Text style={{ color: 'black', fontSize: 16, textAlign: 'center' }}>{country.name}</Text>
+                        <Text style={{ color: 'black', fontSize: 16, textAlign: 'center' }}>{country.currency_name}</Text>
                     </View>
                     <View style={{ justifyContent: 'center', flex: 1, alignItems: 'flex-end' }}>
-                        <Text style={{ color: 'black', fontSize: 16, textAlign: 'center' }}>{country.currency}</Text>
+                        <Text style={{ color: 'black', fontSize: 17, textAlign: 'center' }}>{country.symbol}</Text>
                     </View>
                 </View>
             </TouchableNativeFeedback>
