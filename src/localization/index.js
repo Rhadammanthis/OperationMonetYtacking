@@ -8,7 +8,7 @@ const translationGetters = {
 	en: () => require("./en.json"),
 	es: () => require("./es.json"),
 	pl: () => require("./pl.json"),
-	se: () => require("./se.json")
+	sv: () => require("./se.json")
 }
 
 // fallback if no available language fits
