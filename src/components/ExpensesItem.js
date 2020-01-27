@@ -7,16 +7,18 @@ import Icon from 'react-native-vector-icons/FontAwesome5';
 import { Transition } from 'react-navigation-fluid-transitions'
 import { getColor, getIcon } from "../data/categories"
 import { applyMoneyMask } from '../data/consts';
+import DoubleTap from './DoubleTapView';
+
+const DOUBLE_PRESS_DELAY = 400;
 
 class ExpensesItem extends Component {
     constructor(props) {
         super(props)
         this._animated = new Animated.Value(0)
+        this.lastPress = 0
     }
 
     componentDidMount() {
-
-        console.log("Component mounted: ", this.props.index)
 
         Animated.timing(this._animated, {
             toValue: 1,
@@ -25,11 +27,24 @@ class ExpensesItem extends Component {
         }).start()
     }
 
-    render() {
-        const { item, history, onUpdated, currency } = this.props
+    onPress = () => {
+        const time = new Date().getTime();
+        const delta = time - this.lastPress;
+        const { item, history, onUpdated, currency, navigation } = this.props
 
-        console.log("Currency", currency)
-        console.log("Item Amount", item)
+        if (delta < DOUBLE_PRESS_DELAY) {
+            // Success double press
+            const { navigate } = navigation;
+            navigate('History', { cat: item.key, history: history, amount: item.amount, onUpdated: onUpdated, currency: currency })
+        } else {
+            //Single press
+            this.props.onPress()
+        }
+        this.lastPress = time;
+    }
+
+    render() {
+        const { item, history, onUpdated, currency, navigation } = this.props
 
         const rowStyles = [
             styles.tile,
@@ -49,10 +64,14 @@ class ExpensesItem extends Component {
             },
         ];
         return (
-            <TouchableOpacity onPress={() => { this.props.onPress() }} onLongPress={(event) => {
-                const { navigate } = this.props.navigation;
-                navigate('History', { cat: item.key, history: history, amount: item.amount, onUpdated: onUpdated, currency: currency })
-            }}>
+            <DoubleTap singleTap={() => {
+                this.props.onPress()
+            }}
+                doubleTap={() => {
+                    const { navigate } = navigation;
+                    navigate('History', { cat: item.key, history: history, amount: item.amount, onUpdated: onUpdated, currency: currency })
+                }}
+                delay={200}>
                 <Animated.View style={rowStyles}>
                     <Transition shared={getIcon(item.key)}>
                         <View style={[styles.icon, { backgroundColor: getColor(item.key) }]}>
@@ -61,7 +80,7 @@ class ExpensesItem extends Component {
                     </Transition>
                     <Text style={{ fontSize: 16, marginTop: 5, color: 'white' }}>{applyMoneyMask(item.amount)} {currency}</Text>
                 </Animated.View>
-            </TouchableOpacity>
+            </DoubleTap>
         )
     }
 }

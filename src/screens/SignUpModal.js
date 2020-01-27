@@ -155,7 +155,7 @@ class SignUpModal extends Component {
                         </View> :
                         <View style={{ flex: 3 }}>
                             <LocalizedText localizationKey={"account_email"} style={{ color: "white" }} />
-                            <TextInput editable={editable} onChangeText={(text) => this.setState({ email: text })} style={styles.textInput} keyboardType={translate("account_email_hint")} value={this.state.email} placeholder={'Email'}></TextInput>
+                            <TextInput editable={editable} onChangeText={(text) => this.setState({ email: text })} style={styles.textInput} keyboardType={'email-address'} value={this.state.email} placeholder={translate("account_email_hint")}></TextInput>
                             <LocalizedText localizationKey={"account_password"} style={{ color: "white", marginTop: 10 }} />
                             <TextInput editable={editable} onChangeText={(text) => this.setState({ password: text })} style={styles.textInput} secureTextEntry={true} value={this.state.password} placeholder={translate("account_password_hint")}></TextInput>
                             <LocalizedText localizationKey={"account_repeat_password"} style={{ color: "white", marginTop: 10 }} />

@@ -13,13 +13,14 @@ import firebase from 'firebase';
 import * as Progress from 'react-native-progress';
 import LocalizedText from "../components/LocalizedText"
 import { WIDTH, HEIGHT, SPENDLESS_BLUE, SPENDLESS_LIGHT_BLUE } from "../data/consts"
+import { translate } from '../localization';
 
 
 class Splash extends Component {
 	constructor(props) {
 		super(props)
 		//161943 H&K
-		this.state = { code: "", storedCode: null, settings: {}, animError: new Animated.Value(0), spinner: new Animated.Value(0), errorMessage: "", busy: false }
+		this.state = { code: "", storedCode: null, settings: {}, animError: new Animated.Value(0), spinner: new Animated.Value(0), errorMessage: "", busy: true }
 	}
 
 	_storeData = async (code, password) => {
@@ -109,6 +110,7 @@ class Splash extends Component {
 					this.props.navigation.navigate('Main', { moneyData: value, code: this.state.code, currency: this.state.settings })
 				})
 				.catch(error => {
+					this.setState({busy: false})
 					this.animateErrorMessage(error)
 				}))
 			.catch((error) => this.props.navigation.navigate('Tutorial'))
@@ -176,8 +178,8 @@ class Splash extends Component {
 			<View style={{ flexDirection: 'row', marginTop: 20 }}>
 				<View style={{ flex: 1 }} />
 				<View style={{ flex: 3 }}>
-					<TextInput onChangeText={(text) => this.setState({ code: text })} style={{ backgroundColor: 'white', borderRadius: 10, marginVertical: 10 }} keyboardType={'numeric'} value={this.state.code} placeholder={'Account Code'}></TextInput>
-					<TextInput onSubmitEditing={this.onSubmit.bind(this, code, password)} onChangeText={(text) => this.setState({ password: text })} style={{ backgroundColor: 'white', borderRadius: 10, marginVertical: 10 }} secureTextEntry={true} value={this.state.password} placeholder={'Password'}></TextInput>
+					<TextInput onChangeText={(text) => this.setState({ code: text })} style={{ backgroundColor: 'white', borderRadius: 10, marginVertical: 10 }} value={this.state.code} placeholder={translate("splash_user_name")}></TextInput>
+					<TextInput onSubmitEditing={this.onSubmit.bind(this, code, password)} onChangeText={(text) => this.setState({ password: text })} style={{ backgroundColor: 'white', borderRadius: 10, marginVertical: 10 }} secureTextEntry={true} value={this.state.password} placeholder={translate("splash_password")}></TextInput>
 					<TouchableNativeFeedback onPress={this.onSubmit.bind(this, code, password)}
 						style={{ borderRadius: 20 }}>
 						<View style={styles.button}>
