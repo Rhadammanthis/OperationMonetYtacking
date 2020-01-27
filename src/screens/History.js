@@ -3,7 +3,7 @@ import {
     StyleSheet,
     View, Text,
     StatusBar,
-    BackHandler,
+    BackHandler, TouchableNativeFeedback,
     TouchableOpacity, Animated
 } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome5';
@@ -48,21 +48,50 @@ class History extends Component {
         }
 
         let items = this.history.map((item, i) => {
-            return (
-                <TouchableOpacity key={i} onPress={(event) => {
-                    this.amount -= item.amount
-                    this.history.splice(i, 1)
-                    this.setState({ history: this.history })
 
-                    this.props.navigation.state.params.onUpdated(this.category,
-                        this.amount);
-                }}>
-                    <View style={{ flexDirection: 'row', marginHorizontal: 10, backgroundColor: "" }}>
-                        <Text style={{ fontSize: 20, color: 'black' }}>{applyMoneyMask(item.amount)} {this.currency}</Text>
-                        <View style={{ flex: 1 }} />
-                        <Text style={{ fontSize: 15 }}>{new Date(item.date).toLocaleTimeString()}</Text>
-                    </View>
-                </TouchableOpacity>
+            let animated = new Animated.Value(0)
+            let interpolatedValue = animated.interpolate({
+                inputRange: [0, 1],
+                outputRange: [40, -5]
+            })
+            let animation = Animated.spring(animated, {
+                toValue: 1,
+                duration: 200,
+                friction: 8,
+                tension: 50,
+                useNativeDriver: true
+            })
+
+            let reverseAnimation = Animated.spring(animated, {
+                toValue: 0,
+                duration: 200,
+                friction: 8,
+                tension: 50,
+                useNativeDriver: true
+            })
+
+            return (
+                <View style={{ flexDirection: 'row' }} key={i}>
+                    <TouchableNativeFeedback onPress={() => { animation.start(); setTimeout(() => { reverseAnimation.start() }, 2000) }}>
+                        <View style={{ flexDirection: 'row', marginHorizontal: 10, flex: 1, paddingVertical: 5 }}>
+                            <Text style={{ fontSize: 20, color: 'black' }}>{applyMoneyMask(item.amount)} {this.currency}</Text>
+                            <View style={{ flex: 1 }} />
+                            <Text style={{ fontSize: 15, textAlignVertical: 'center' }}>{new Date(item.date).toLocaleTimeString()}</Text>
+                        </View>
+                    </TouchableNativeFeedback>
+                    <Animated.View style={[styles.deleteButton, { transform: [{ translateX: interpolatedValue }] }]}>
+                        <TouchableNativeFeedback onPress={(evt) => {
+                            this.amount -= item.amount
+                            this.history.splice(i, 1)
+                            this.setState({ history: this.history })
+
+                            this.props.navigation.state.params.onUpdated(this.category,
+                                this.amount);
+                        }}>
+                            <Icon color={'white'} size={20} name="times-circle" />
+                        </TouchableNativeFeedback>
+                    </Animated.View>
+                </View>
             )
         })
 
@@ -72,19 +101,14 @@ class History extends Component {
     render() {
         return (
             <View style={{ flex: 1, flexDirection: 'column', backgroundColor: getColor(this.category) }}>
-                <View style={{ flexDirection: 'row', padding: 20 }}>
-                    <Transition shared={getIcon(this.category)}>
-                        <Animated.View style={[styles.icon, { backgroundColor: getColor(this.category) }]}>
-                            <Icon size={35} color={'white'} name={getIcon(this.category)} />
-                        </Animated.View>
-                    </Transition>
-                    <View style={{ flex: 1, justifyContent: 'flex-start', marginLeft: 20 }}>
-                        <Text style={{ color: 'white', fontSize: 30 }}>{getName(this.category)}</Text>
-                        <Text style={{ color: 'white', fontSize: 20, marginTop: 20 }}>{todaysDate}</Text>
-                    </View>
+                <View style={{ flexDirection: 'column', padding: 20, justifyContent: 'center', alignItems: 'center' }}>
+                    <Animated.View style={[styles.icon, { backgroundColor: getColor(this.category) }]}>
+                        <Icon size={55} color={'white'} name={getIcon(this.category)} />
+                    </Animated.View>
+                    <Text style={{ color: 'white', fontSize: 30, textAlign: 'center' }}>{getName(this.category)}</Text>
+                    <Text style={{ color: 'white', fontSize: 20, marginTop: 10, textAlign: 'center' }}>{todaysDate}</Text>
                 </View>
-
-                <View style={{ marginHorizontal: 10, marginBottom: 10, flex: 1, borderRadius: 20, backgroundColor: 'white' }}>
+                <View style={{ marginHorizontal: 10, marginBottom: 10, flex: 1, borderRadius: 20, backgroundColor: '#EEE' }}>
                     <View style={{ flexDirection: 'row', margin: 10 }}>
                         <LocalizedText localizationKey={"history_amount"} style={{ fontSize: 25, color: 'black' }} />
                         <View style={{ flex: 1 }} />
@@ -98,7 +122,8 @@ class History extends Component {
 }
 
 const styles = StyleSheet.create({
-    icon: { width: 60, height: 60, borderRadius: 35, borderWidth: 3, borderColor: 'white', alignItems: 'center', justifyContent: 'center' },
+    icon: { width: 100, height: 100, borderRadius: 50, borderWidth: 3, borderColor: 'white', alignItems: 'center', justifyContent: 'center' },
+    deleteButton: { alignItems: 'center', justifyContent: 'center', height: 30, width: 30, borderRadius: 15, backgroundColor: '#AA3C3B' }
 });
 
 export default History

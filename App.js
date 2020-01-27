@@ -1,7 +1,5 @@
 import React, { Component } from 'react';
 import { createAppContainer, createStackNavigator } from "react-navigation";
-import { FluidNavigator } from 'react-navigation-fluid-transitions'
-
 import Splash from "./src/screens/Splash"
 import Profile from "./src/screens/Profile"
 import ShoppingList from "./src/screens/ShoppingList"
@@ -10,8 +8,6 @@ import Tutorial from "./src/screens/Tutorial"
 import Currency from "./src/screens/Currency"
 import History from "./src/screens/History"
 import Main from "./src/screens/Main"
-import { Animated, Easing } from 'react-native';
-
 
 const AppNavigator = createStackNavigator(
 	{
