@@ -52,12 +52,12 @@ class Main extends Component {
 		LocaleConfig.defaultLocale = 'es';
 
 		const { navigation } = this.props;
-		
+
 		let data = navigation.getParam('moneyData', null).expenses;
 		this.shopping = navigation.getParam('moneyData', null).shopping;
 		this.code = navigation.getParam('code', null);
 		this.currency = navigation.getParam('currency', null);
-		
+
 		this.dataStore = new DataStore(data, this.code)
 
 		this.currentMonth = new Date().toISOString().substring(0, 7)
@@ -122,7 +122,7 @@ class Main extends Component {
 			return (
 				<ActionButton offsetX={10} offsetY={10} spacing={15} fixNativeFeedbackRadius={true} position="right" backdrop={
 					<View style={{ position: 'absolute', top: 0, left: 0, height: HEIGHT, width: WIDTH, backgroundColor: 'black', opacity: 0.7 }}></View>
-				} size={47} buttonColor="rgba(0, 173, 245, 1)">
+				} size={45} buttonColor="rgba(0, 173, 245, 1)">
 					<ActionButton.Item textStyle={{ color: 'white' }}
 						textContainerStyle={{ borderRadius: 5, backgroundColor: getColor(Categories.Vegtables), borderColor: getColor(Categories.Vegtables) }}
 						buttonColor={getColor(Categories.Vegtables)} title={getName(Categories.Vegtables)} onPress={this.categoryButtonPressed.bind(this, Categories.Vegtables)}>
@@ -312,10 +312,10 @@ class Main extends Component {
 								history={this.dataStore.history[item.key]}
 								onUpdated={this.onUpdated} />)
 						} />
-					<View style={{ backgroundColor: '#005577', width: WIDTH, alignItems: 'center', justifyContent: 'center', height: 70 }}>
-						{this._renderDayTotal()}
-					</View>
 				</Draggable>
+				<View style={{ backgroundColor: '#005577', width: WIDTH, alignItems: 'center', justifyContent: 'center', height: 60, position: 'absolute', bottom: 0}}>
+					{this._renderDayTotal()}
+				</View>
 				{/* ***************** MODAL ****************** */}
 				<Modal style={{
 					height: 190,
