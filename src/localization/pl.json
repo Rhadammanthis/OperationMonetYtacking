@@ -3,7 +3,7 @@
     "tutorial_card_0_title": "Utwórz konto",
     "tutorial_card_0_description": "Podziel się swoim kontem z innymi aby jak najlepiej wykorzystać Spendless! Będziesz mógł udostępniać zarówno informacje dotyczące wydatków, jak i utworzoną listę zakupów!",
     "tutorial_card_1_title": "Czytelny i prosty interface",
-    "tutorial_card_1_description": "Wybierz dowolny dzień tygodnia i zacznij śledzić swoje wydatki!",
+    "tutorial_card_1_description": "Wybierz dowolny dzień tygodnia i zacznij śledzić swoje wydatki! Podwójnie klikając wybraną kategorię możesz sprawdzić historię swoich wydatków.",
     "tutorial_card_2_title": "Zarejestruj swoje dzienne wydatki",
     "tutorial_card_2_description": "Wybierz kategorię i wprowadź wydaną sumę! Informacje są zschynronizowane z internetową bazą danych i udostępnione pomiędzy Twoimi urządzeniami!",
     "tutorial_card_3_title": "Sprawdź Podsumowanie Miesiąca",
@@ -80,5 +80,6 @@
     "system_error_passwords_match": "Hasła są niezgodne",
     "auth/invalid-email": "Niepoprawny adres email",
     "auth/weak-password": "Hasło powinno zawierać co najmniej 6 znaków",
-    "auth/email-already-in-use": "Konto powiązane z podanym adresem email już istnieje"
+    "auth/email-already-in-use": "Konto powiązane z podanym adresem email już istnieje",
+    "auth/user-not-found": "Niepoprawny adres email"
 }

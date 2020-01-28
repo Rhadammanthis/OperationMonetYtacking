@@ -3,7 +3,7 @@
     "tutorial_card_0_title": "Crea una Cuenta",
     "tutorial_card_0_description": "¡Comparte tu cuenta con otros para poder utilizar Spendless al máximo! Podrás compartir tus gastos y lista de compras",
     "tutorial_card_1_title": "Una Interfaz Sencilla",
-    "tutorial_card_1_description": "Selecciona cualquier día y comienza a registrar tus gastos",
+    "tutorial_card_1_description": "Selecciona cualquier día y comienza a registrar tus gastos. Haz doble-click en cualquier categoría para revisar tu historial",
     "tutorial_card_2_title": "Registra tus gastos día con día",
     "tutorial_card_2_description": "Selecciona una categoría y registra cuanto has gastado. Los datos son sincronizados automáticamente a través de todos tus dispositivos",
     "tutorial_card_3_title": "Revisa Tu Resumen Mensual",
@@ -80,5 +80,6 @@
     "system_error_passwords_match": "Las contraseñas no son idénticas",
     "auth/invalid-email": "La dirección de correo no es válida",
     "auth/weak-password": "La contraseña debe ser de al menos 6 caracteres",
-    "auth/email-already-in-use": "Ya existe una cuenta con ese correo"
+    "auth/email-already-in-use": "Ya existe una cuenta con ese correo",
+    "auth/user-not-found": "La dirección de correo no es válida"
 }

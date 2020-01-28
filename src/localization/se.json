@@ -1,9 +1,9 @@
 {
     "tutorial_header_title": "Välkomen till Spendless!",
     "tutorial_card_0_title": "Skapa ett konto",
-    "tutorial_card_0_description": "Dela ditt konto med andra och få så mycket som möjligt av Spendless! Du kan dela både inköpslista och data på dina utgifter",
-    "tutorial_card_1_title": "Ett klart och enkelt gränssnitt",
-    "tutorial_card_1_description": "Välj vilken dag som helst och börja spåra dina kostnader!",
+    "tutorial_card_0_description": "Dela ditt konto med andra och få så mycket som möjligt av Spendless! Du kan dela både din inköpslista och data på dina utgifter",
+    "tutorial_card_1_title": "Klart och enkelt gränssnitt",
+    "tutorial_card_1_description": "Välj vilken dag som helst och börja spåra dina kostnader! Dubbel-klicka en kategori till att visa din inköpshistoria",
     "tutorial_card_2_title": "Registrera dina dagliga utgifter!",
     "tutorial_card_2_description": "Välj någon kategori och registrera en summa som du har lagt ut! Informationer synkroniseras med online databasen och delas mellan alla dina apparater!",
     "tutorial_card_3_title": "Kontrollera Månadsöversikt",
@@ -37,7 +37,7 @@
     "history_time": "Datum",
     "profile_title": "Profil",
     "profile_email": "E-mail",
-    "profile_account": "Ange koden",
+    "profile_account": "Koden till ditt konto",
     "profile_button_log_out": "Logga ut",
     "shopping_list_title": "Inköpslista",
     "shopping_list_hint": "Ny vara",
@@ -80,5 +80,6 @@
     "system_error_passwords_match": "Lösenorden passar inte ihop",
     "auth/invalid-email": "Inkorrekt E-mail",
     "auth/weak-password": "Lösenordet bör bestå av 6 tecken",
-    "auth/email-already-in-use": "Det finns redan ett konto som använder detta e-mail"
+    "auth/email-already-in-use": "Det finns redan ett konto som använder detta e-mail",
+    "auth/user-not-found": "Inkorrekt E-mail"
 }

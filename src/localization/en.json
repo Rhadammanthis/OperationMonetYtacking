@@ -3,7 +3,7 @@
     "tutorial_card_0_title": "Create An Account",
     "tutorial_card_0_description": "Share your account with others to get the most out of Spendless! You'll be able to share expenses data and shopping list!",
     "tutorial_card_1_title": "A Clear And Simple Interface",
-    "tutorial_card_1_description": "Select any given week day and start tracking your expenses!",
+    "tutorial_card_1_description": "Select any given week day and start tracking your expenses! Double-click any category to review your expenses history",
     "tutorial_card_2_title": "Log In Your Daily Expenses",
     "tutorial_card_2_description": "Select a category and log in how much did you spend! The data is synced with the on-line database and shared across your devices",
     "tutorial_card_3_title": "Check Your Monthly Summary",
@@ -80,5 +80,6 @@
     "system_error_passwords_match": "Passwords do not match",
     "auth/invalid-email": "The email is not valid",
     "auth/weak-password": "Password should be at least 6 characters long",
-    "auth/email-already-in-use": "Email address already in use"
+    "auth/email-already-in-use": "Email address already in use",
+    "auth/user-not-found": "The email is not valid"
 }
