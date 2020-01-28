@@ -99,7 +99,16 @@ class Splash extends Component {
 		this.didBlurSubscription = this.props.navigation.addListener(
 			'didBlur',
 			payload => {
-				this.setState({ busy: false, code: "" })
+				console.log("Blurred")
+				this.setState({ busy: false, code: "", password: "" })
+			}
+		);
+
+		this.didFocusSubscription = this.props.navigation.addListener(
+			'didFocus',
+			payload => {
+				if(payload.lastState != null)
+					this.setState({ busy: false })
 			}
 		);
 
@@ -119,6 +128,7 @@ class Splash extends Component {
 
 	componentWillUnmount() {
 		this.didBlurSubscription.remove()
+		this.didFocusSubscription.remove()
 	}
 
 	onSubmit = (code, password) => {

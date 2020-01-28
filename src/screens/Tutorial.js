@@ -61,39 +61,39 @@ class Tutorial extends Component {
                     data={[
                         {
                             id: "0",
-                            title: translate("tutorial_card_0_title"),
-                            description: translate("tutorial_card_0_description"),
-                            image: require("../../img/account_smol.png")
+                            title: "tutorial_card_0_title",
+                            description: "tutorial_card_0_description",
+                            image: require("../../img/screen_grab_0_smol.png")
                         },
                         {
                             id: "2",
-                            title: translate("tutorial_card_1_title"),
-                            description: translate("tutorial_card_1_description"),
+                            title: "tutorial_card_1_title",
+                            description: "tutorial_card_1_description",
                             image: require("../../img/screen_grab_1_smol.png")
                         },
                         {
                             id: "3",
-                            title: translate("tutorial_card_2_title"),
-                            description: translate("tutorial_card_2_description"),
+                            title: "tutorial_card_2_title",
+                            description: "tutorial_card_2_description",
                             image: require("../../img/screen_grab_2_smol.png")
                         },
                         {
                             id: "4",
-                            title: translate("tutorial_card_3_title"),
-                            description: translate("tutorial_card_3_description"),
+                            title: "tutorial_card_3_title",
+                            description: "tutorial_card_3_description",
                             image: require("../../img/screen_grab_3_smol.png")
                         },
                         {
                             id: "5",
-                            title: translate("tutorial_card_4_title"),
-                            description: translate("tutorial_card_4_description"),
+                            title: "tutorial_card_4_title",
+                            description: "tutorial_card_4_description",
                             image: require("../../img/screen_grab_4_smol.png")
                         },
                     ]}
                     renderItem={info => (
                         <View style={{ flex: 1 }}>
-                            <Text style={{ color: '#000000DD', textAlign: "center", fontSize: 20 }}>{info.item.title}</Text>
-                            <Text style={{ color: '#000000DD', textAlign: "center", fontSize: 17, marginVertical: 5 }}>{info.item.description}</Text>
+                            <LocalizedText localizationKey={info.item.title} style={{ color: '#000000DD', textAlign: "center", fontSize: 20 }} />
+                            <LocalizedText localizationKey={info.item.description} style={{ color: '#000000DD', textAlign: "center", fontSize: 17, marginVertical: 5 }} />
                             <Image style={{ flex: 1, aspectRatio: 0.5, alignSelf: "center" }} source={info.item.image} />
                         </View>
                     )}
