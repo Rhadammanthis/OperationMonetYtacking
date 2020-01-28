@@ -71,7 +71,7 @@ class History extends Component {
             })
 
             return (
-                <View style={{ flexDirection: 'row' }} key={i}>
+                <View style={{ flexDirection: 'row', alignItems: 'center' }} key={i}>
                     <TouchableNativeFeedback onPress={() => { animation.start(); setTimeout(() => { reverseAnimation.start() }, 2000) }}>
                         <View style={{ flexDirection: 'row', marginHorizontal: 10, flex: 1, paddingVertical: 5 }}>
                             <Text style={{ fontSize: 20, color: 'black' }}>{applyMoneyMask(item.amount)} {this.currency}</Text>
