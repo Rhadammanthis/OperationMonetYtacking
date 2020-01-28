@@ -97,7 +97,7 @@ class Splash extends Component {
 	componentDidMount() {
 
 		this.didBlurSubscription = this.props.navigation.addListener(
-			'didFocus',
+			'didBlur',
 			payload => {
 				this.setState({ busy: false, code: "" })
 			}
@@ -134,9 +134,9 @@ class Splash extends Component {
 							})
 					)
 					.catch((error) => {
+						this.setState({ busy: false})
 						this.animateErrorMessage(error)
 					})
-					.finally(() => this.setState({ busy: false }))
 			}
 		)
 	}
