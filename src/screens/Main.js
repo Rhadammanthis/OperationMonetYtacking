@@ -53,8 +53,8 @@ class Main extends Component {
 
 		const { navigation } = this.props;
 
-		let data = navigation.getParam('moneyData', null).expenses;
-		this.shopping = navigation.getParam('moneyData', null).shopping;
+		let data = navigation.getParam('expensesData', null).expenses;
+		this.shopping = navigation.getParam('expensesData', null).shopping;
 		this.code = navigation.getParam('code', null);
 		this.currency = navigation.getParam('currency', null);
 

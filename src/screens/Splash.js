@@ -23,8 +23,18 @@ class Splash extends Component {
 		this.state = { code: "", storedCode: null, settings: {}, animError: new Animated.Value(0), spinner: new Animated.Value(0), errorMessage: "", busy: true }
 	}
 
-	_storeData = async (code, password) => {
+	validateEmail = (email) => {
+		var re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+		return re.test(String(email).toLowerCase());
+	}
+
+	_storeData = async () => {
 		try {
+
+			const {code, password} = this.state
+
+			console.log(`Saving ${code} and ${password}`)
+
 			await AsyncStorage.setItem('@persistentItem:code', code);
 			await AsyncStorage.setItem('@persistentItem:password', password);
 		} catch (error) {
@@ -50,14 +60,36 @@ class Splash extends Component {
 			this.setState({ busy: true, code: code })
 
 			try {
-				let snapshot = await firebase.database().ref(`/users/${code}/`).once('value');
 
-				if (snapshot.val() === null)
-					return Promise.reject(new Error("No data available using that code"))
+				if (!this.validateEmail(code)) {
 
-				const email = snapshot.val().email
+					//It's not a valid email but doesn't mean is necesarely a code, Maybe it's just a malformed email. We need tro check for that too
+					const emailChars = ["@", "."]
+					if (emailChars.some(v => code.includes(v))) {
+						return Promise.reject("system_error_no_data")
+					}
 
-				let user = await firebase.auth().signInWithEmailAndPassword(email, password)
+					let snapshot = await firebase.database().ref(`/users/${code}/`).once('value');
+
+					if (snapshot.val() === null)
+						return Promise.reject("system_error_no_data")
+
+					var email = snapshot.val().email
+				} else {
+					var email = code
+
+					//Query for the user's data to retrieve the Account Code
+					let user = await firebase.database().ref('/users').orderByChild("email").equalTo(email).once('value')
+						.catch((reason) => { return Promise.reject("system_error_no_data") })
+
+					//Now that we know which user has that email, extract the Account Code
+					code = Object.keys(user.val())[0]
+
+					this.setState({code: code})
+				}
+
+				//Sign user in to check credentials
+				let loggedInUser = await firebase.auth().signInWithEmailAndPassword(email, password)
 					.catch((reason) => { return Promise.reject(reason.code) })
 
 				var moneyData = await firebase.database().ref(`/${code}/`)
@@ -107,7 +139,7 @@ class Splash extends Component {
 		this.didFocusSubscription = this.props.navigation.addListener(
 			'didFocus',
 			payload => {
-				if(payload.lastState != null)
+				if (payload.lastState != null)
 					this.setState({ busy: false })
 			}
 		);
@@ -119,7 +151,7 @@ class Splash extends Component {
 					this.props.navigation.navigate('Main', { moneyData: value, code: this.state.code, currency: this.state.settings })
 				})
 				.catch(error => {
-					this.setState({busy: false})
+					this.setState({ busy: false })
 					this.animateErrorMessage(error)
 				}))
 			.catch((error) => this.props.navigation.navigate('Tutorial'))
@@ -133,18 +165,17 @@ class Splash extends Component {
 
 	onSubmit = (code, password) => {
 
-
 		this._retrieveSettings().then(
 			(value) => {
 				this._retrieveData(code, password)
-					.then((moneyData) =>
-						this._storeData(code, password)
+					.then((expensesData) =>
+						this._storeData()
 							.then(value => {
-								this.props.navigation.navigate('Main', { moneyData: moneyData, code: this.state.code, currency: this.state.settings })
+								this.props.navigation.navigate('Main', { expensesData: expensesData, code: this.state.code, currency: this.state.settings })
 							})
 					)
 					.catch((error) => {
-						this.setState({ busy: false})
+						this.setState({ busy: false })
 						this.animateErrorMessage(error)
 					})
 			}
@@ -156,6 +187,8 @@ class Splash extends Component {
 	}
 
 	animateErrorMessage = (message) => {
+
+		console.log("Message", message)
 
 		this.setState({ errorMessage: message })
 
@@ -193,7 +226,7 @@ class Splash extends Component {
 					<TouchableNativeFeedback onPress={this.onSubmit.bind(this, code, password)}
 						style={{ borderRadius: 20 }}>
 						<View style={styles.button}>
-							<LocalizedText localizationKey={"splash_button"} style={{ color: 'white' }}/>
+							<LocalizedText localizationKey={"splash_button"} style={{ color: 'white' }} />
 						</View>
 					</TouchableNativeFeedback>
 					<TouchableNativeFeedback onPress={() => this.props.navigation.navigate('SignUpModal', { onCodeCreated: this.onCodeCreated })}>
@@ -204,7 +237,6 @@ class Splash extends Component {
 			</View>
 			: null
 	}
-
 
 	render() {
 		const { animError, errorMessage, busy } = this.state
