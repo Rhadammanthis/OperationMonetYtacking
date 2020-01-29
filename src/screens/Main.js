@@ -337,6 +337,7 @@ class Main extends Component {
 						<Button onPress={() => {
 
 							this.dataStore.addExpense(this.state.selectedDay, this.state.catSelected, this.state.amount)
+							this.setState({amount: ""})
 							this.setModalVisible(!this.state.modalVisible)
 
 						}} style={{
