@@ -88,6 +88,8 @@ class Splash extends Component {
 					this.setState({code: code})
 				}
 
+				console.log(`Email: ${email}, Password: ${password}, Code: ${code}`)
+
 				//Sign user in to check credentials
 				let loggedInUser = await firebase.auth().signInWithEmailAndPassword(email, password)
 					.catch((reason) => { return Promise.reject(reason.code) })
@@ -95,6 +97,7 @@ class Splash extends Component {
 				var moneyData = await firebase.database().ref(`/${code}/`)
 					.once('value')
 					.then((value) => {
+						console.log("Value",value.val())
 						return value.val() || { expenses: {}, shopping: [] }
 					})
 					.catch(errorMessage => {
@@ -147,8 +150,8 @@ class Splash extends Component {
 
 		this._retrieveSettings()
 			.then((value) => this._retrieveData()
-				.then(value => {
-					this.props.navigation.navigate('Main', { moneyData: value, code: this.state.code, currency: this.state.settings })
+				.then(expensesData => {
+					this.props.navigation.navigate('Main', { expensesData: expensesData, code: this.state.code, currency: this.state.settings })
 				})
 				.catch(error => {
 					this.setState({ busy: false })

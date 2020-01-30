@@ -32,10 +32,10 @@ class Main extends Component {
 		super(props);
 
 		this.state = {
-			selectedDay: null, modalVisible: false, catSelected: "vgt",
+			selectedDay: null, modalVisible: false, catSelected: Categories.Vegtables,
 			amount: null, refresh: false, renderTotal: false, anim: new Animated.Value(0),
 			open: false, showSummary: false, lastDay: null, top: Math.floor(HEIGHT / 2), selectedSlice: {
-				label: 'vgt', value: 0
+				label: Categories.Vegtables, value: 0
 			}, labelWidth: 0
 		};
 
@@ -200,19 +200,19 @@ class Main extends Component {
 				monthsTotal > 0 ?
 					<View style={{ justifyContent: 'center', flex: 1 }}>
 						<PieChart
-							style={{ height: HEIGHT * 0.45 }}
-							outerRadius={'85%'}
+							style={{ height: HEIGHT * 0.50 }}
+							outerRadius={'90%'}
 							innerRadius={'55%'}
 							data={pieChartData}
 						/>
 						<View style={{
-							left: (350 / 2 - (WIDTH * 0.150)), position: 'absolute', width: WIDTH * 0.3, height: WIDTH * 0.3,
-							borderRadius: WIDTH * 0.150, borderWidth: 3, borderColor: getColor(label), backgroundColor: "#FFFFFFEE",
+							left: (350 / 2 - (WIDTH * 0.2)), position: 'absolute', width: WIDTH * 0.4, height: WIDTH * 0.4,
+							borderRadius: WIDTH * 0.20, borderWidth: 4, borderColor: getColor(label), backgroundColor: '#EEE',
 							padding: 5, alignItems: 'center', justifyContent: 'center'
 						}}>
-							<Icon style={{ marginVertical: 5 }} size={30} color={getColor(label)} name={getIcon(label)} />
-							<Text style={{ color: getColor(label), marginTop: 5 }}>{getName(label)}</Text>
-							<Text style={{ color: getColor(label) }}>{value} {this.currency}</Text>
+							<Icon style={{ marginTop: 5 }} size={50} color={getColor(label)} name={getIcon(label)} />
+							<Text adjustsFontSizeToFit style={{ color: getColor(label), marginTop: 5, textAlign: 'center' }}>{getName(label)}</Text>
+							<Text style={{ color: getColor(label), fontSize: 17 }}>{value} {this.currency}</Text>
 						</View>
 					</View>
 					:
@@ -230,9 +230,7 @@ class Main extends Component {
 			}} onClosed={() => { this.setState({ showSummary: false, selectedSlice: { label: 'vgt', value: 0 } }) }}
 				position={"center"} ref={"modal3"} isOpen={this.state.showSummary}
 				animationDuration={350} swipeToClose={false}>
-				<Text style={{ textAlign: 'center', paddingLeft: 10, fontSize: 25, color: 'white', paddingVertical: 10 }}>
-					{translate("main_monthly_summary_title")}
-				</Text>
+				<LocalizedText localizationKey={"main_monthly_summary_title"} style={{ textAlign: 'center', paddingLeft: 10, fontSize: 25, color: 'white', paddingVertical: 10 }} />
 				<View style={{ justifyContent: 'center', flex: 1 }}>
 					{_renderPieChart()}
 				</View>
@@ -263,11 +261,6 @@ class Main extends Component {
 		}
 
 		return null
-	}
-
-	pushData = async (data) => {
-		console.log("Data pushed!")
-		//let snapshot = await firebase.database().ref(`/${this.props.navigation.getParam('code', null)}/expenses`).update(data)
 	}
 
 	updateCurrentMonth = (date) => {
