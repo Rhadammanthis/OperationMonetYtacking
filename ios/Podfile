@@ -28,6 +28,7 @@ target 'OperationMoneyTracking' do
   pod 'Folly', :podspec => '../node_modules/react-native/third-party-podspecs/Folly.podspec'
 
   pod 'RNVectorIcons', :path => '../node_modules/react-native-vector-icons'
+  pod 'React-ART', :path => '../node_modules/react-native/Libraries/ART'
 
   target 'OperationMoneyTrackingTests' do
     inherit! :search_paths

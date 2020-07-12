@@ -4,6 +4,8 @@
   "private": true,
   "scripts": {
     "start": "react-native start",
+    "android": "react-native run-android",
+    "ios": "react-native run-ios --simulator=\"iPhone 11\"",
     "test": "jest",
     "lint": "eslint ."
   },
@@ -22,19 +24,21 @@
     "react-native-localize": "^1.3.1",
     "react-native-modalbox": "^1.7.1",
     "react-native-progress": "^3.6.0",
+    "react-native-screens": "^2.9.0",
     "react-native-super-grid": "^3.0.9",
     "react-native-svg": "^9.13.3",
     "react-native-svg-charts": "^5.3.0",
-    "react-native-vector-icons": "^6.6.0",
+    "react-native-vector-icons": "6.6.0",
     "react-navigation": "^3.12.1",
     "react-navigation-fluid-transitions": "^0.3.2"
   },
   "devDependencies": {
     "@babel/core": "^7.5.5",
     "@babel/runtime": "^7.5.5",
+    "@callstack/eslint-config": "^10.0.0",
     "@react-native-community/eslint-config": "^0.0.5",
     "babel-jest": "^24.9.0",
-    "eslint": "^6.2.2",
+    "eslint": "^7.4.0",
     "jest": "^24.9.0",
     "metro-react-native-babel-preset": "^0.56.0",
     "react-test-renderer": "16.8.6"
