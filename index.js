@@ -4,7 +4,7 @@
 
 import {AppRegistry, UIManager} from 'react-native';
 import firebase from 'firebase';
-import App from './App';
+import App from './src';
 import {name as appName} from './app.json';
 
 const config = {

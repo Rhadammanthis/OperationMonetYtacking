@@ -1,13 +1,17 @@
 import React, {Component} from 'react';
+import {SafeAreaView, StatusBar} from 'react-native';
 import {createAppContainer, createStackNavigator} from 'react-navigation';
-import Splash from './src/screens/Splash';
-import Profile from './src/screens/Profile';
-import ShoppingList from './src/screens/ShoppingList';
-import SignUpModal from './src/screens/SignUpModal';
-import Tutorial from './src/screens/Tutorial';
-import Currency from './src/screens/Currency';
-import History from './src/screens/History';
-import Main from './src/screens/Main';
+
+import Splash from './screens/Splash';
+import Profile from './screens/Profile';
+import ShoppingList from './screens/ShoppingList';
+import SignUpModal from './screens/SignUpModal';
+import Tutorial from './screens/Tutorial';
+import Currency from './screens/Currency';
+import History from './screens/History';
+import Main from './screens/Main';
+
+import {SPENDLESS_BLUE} from './data/consts';
 
 const AppNavigator = createStackNavigator(
   {
@@ -44,13 +48,9 @@ let AppContainer = createAppContainer(RootStack);
 
 export default () => {
   return (
-    <AppContainer
-      onNavigationStateChange={(prevState, newState, action) => {
-        {
-          /* if (action.type === "Navigation/BACK" && newState.index === 0)
-			BackHandler.exitApp() */
-        }
-      }}
-    />
+    <SafeAreaView style={{flex: 1, backgroundColor: SPENDLESS_BLUE}}>
+      <StatusBar barStyle="light-content" translucent={true} />
+      <AppContainer />
+    </SafeAreaView>
   );
 };
