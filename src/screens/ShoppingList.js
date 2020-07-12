@@ -1,6 +1,6 @@
 import React, {Component, useState, useEffect} from 'react';
 import {
-  TouchableHighlight,
+  TouchableOpacity,
   View,
   Text,
   FlatList,
@@ -104,7 +104,7 @@ class ShoppingList extends Component {
             flex: 1,
             alignItems: 'center',
           }}>
-          <TouchableHighlight
+          <TouchableOpacity
             onPress={evt => {
               setActive(!active);
               this.shoppingList[index].active = !active;
@@ -120,8 +120,8 @@ class ShoppingList extends Component {
                 },
               ]}
             />
-          </TouchableHighlight>
-          <TouchableHighlight
+          </TouchableOpacity>
+          <TouchableOpacity
             onPress={() => {
               animation.start();
               setTimeout(() => {
@@ -129,14 +129,14 @@ class ShoppingList extends Component {
               }, 2000);
             }}>
             <Text style={styles.item}> {title} </Text>
-          </TouchableHighlight>
+          </TouchableOpacity>
         </View>
         <Animated.View
           style={[
             styles.deleteButton,
             {transform: [{translateX: interpolatedValue}]},
           ]}>
-          <TouchableHighlight
+          <TouchableOpacity
             onPress={evt => {
               console.log(`${index} should be deleted`);
               this.shoppingList.splice(index, 1);
@@ -144,7 +144,7 @@ class ShoppingList extends Component {
               this.pusher.pushShoppingList(this.shoppingList);
             }}>
             <Icon color={'white'} size={20} name="times-circle" />
-          </TouchableHighlight>
+          </TouchableOpacity>
         </Animated.View>
       </View>
     );
@@ -195,7 +195,7 @@ class ShoppingList extends Component {
             justifyContent: 'space-between',
           }}>
           <TextInput
-            style={{flex: 1, backgroundColor: 'white', borderRadius: 10}}
+            style={{flex: 1, backgroundColor: 'white', borderRadius: 10, height: 50, paddingLeft: 10}}
             placeholder={translate('shopping_list_hint')}
             value={this.state.extraItemText}
             onChangeText={text => this.setState({extraItemText: text})}

@@ -5,12 +5,10 @@ import {
   Text,
   StatusBar,
   BackHandler,
-  TouchableHighlight,
   TouchableOpacity,
   Animated,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome5';
-import {Transition} from 'react-navigation-fluid-transitions';
 import {applyMoneyMask, SPENDLESS_BLUE} from '../data/consts';
 import {getColor, getIcon, getName} from '../data/categories';
 import LocalizedText from '../components/LocalizedText';
@@ -28,9 +26,9 @@ class History extends Component {
 
     this._animated = new Animated.Value(0);
 
-    todaysDate = new Date(this.history[0].date).toLocaleDateString();
+    this.todaysDate = new Date(this.history[0].date).toLocaleDateString();
 
-    state = {history: this.history};
+    this.state = {history: this.history};
     console.log(this.history);
   }
 
@@ -72,7 +70,7 @@ class History extends Component {
 
       return (
         <View style={{flexDirection: 'row', alignItems: 'center'}} key={i}>
-          <TouchableHighlight
+          <TouchableOpacity
             onPress={() => {
               animation.start();
               setTimeout(() => {
@@ -94,13 +92,13 @@ class History extends Component {
                 {new Date(item.date).toLocaleTimeString()}
               </Text>
             </View>
-          </TouchableHighlight>
+          </TouchableOpacity>
           <Animated.View
             style={[
               styles.deleteButton,
               {transform: [{translateX: interpolatedValue}]},
             ]}>
-            <TouchableHighlight
+            <TouchableOpacity
               onPress={evt => {
                 this.amount -= item.amount;
                 this.history.splice(i, 1);
@@ -112,7 +110,7 @@ class History extends Component {
                 );
               }}>
               <Icon color={'white'} size={20} name="times-circle" />
-            </TouchableHighlight>
+            </TouchableOpacity>
           </Animated.View>
         </View>
       );
@@ -150,7 +148,7 @@ class History extends Component {
               marginTop: 10,
               textAlign: 'center',
             }}>
-            {todaysDate}
+            {this.todaysDate}
           </Text>
         </View>
         <View

@@ -1,7 +1,7 @@
 import React, {Component} from 'react';
 import {
   AsyncStorage,
-  TouchableHighlight,
+  TouchableOpacity,
   View,
   Text,
   StyleSheet,
@@ -46,28 +46,27 @@ class Profile extends Component {
         />
         <Text style={{color: 'white', fontSize: 17}}>{this.code}</Text>
         <View style={{flex: 1}} />
-        <TouchableHighlight
-          onPress={event => {
+        <TouchableOpacity
+          onPress={() => {
             firebase
               .auth()
               .signOut()
-              .then(value => {
+              .then(() => {
                 AsyncStorage.multiRemove([
                   '@persistentItem:password',
                   '@persistentItem:code',
-                ]).then(value => {
+                ]).then(() => {
                   this.props.navigation.dispatch(StackActions.popToTop());
                 });
               });
-          }}
-          style={{borderRadius: 20}}>
+          }}>
           <View style={styles.button}>
             <LocalizedText
               localizationKey={'profile_button_log_out'}
               style={{color: 'white'}}
             />
           </View>
-        </TouchableHighlight>
+        </TouchableOpacity>
       </View>
     );
   }

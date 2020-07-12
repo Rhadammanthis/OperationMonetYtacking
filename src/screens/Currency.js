@@ -2,7 +2,7 @@ import React, {Component} from 'react';
 import {
   AsyncStorage,
   StyleSheet,
-  TouchableHighlight,
+  TouchableOpacity,
   View,
   Text,
   Image,
@@ -43,7 +43,7 @@ class Currency extends Component {
     const selected = {backgroundColor: SPENDLESS_LIGHT_BLUE_ALPHA};
 
     return (
-      <TouchableHighlight
+      <TouchableOpacity
         onPress={ev => {
           this.setState({selectedCountry: country});
           springAnimation.start();
@@ -72,7 +72,7 @@ class Currency extends Component {
             </Text>
           </View>
         </View>
-      </TouchableHighlight>
+      </TouchableOpacity>
     );
   };
 
@@ -90,7 +90,7 @@ class Currency extends Component {
     const {animCloseButton, selectedCountry} = this.state;
 
     return (
-      <TouchableHighlight
+      <TouchableOpacity
         onPress={evnt => {
           this._storeData(selectedCountry)
             .then(value => {
@@ -121,7 +121,7 @@ class Currency extends Component {
             style={{color: 'white'}}
           />
         </Animated.View>
-      </TouchableHighlight>
+      </TouchableOpacity>
     );
   };
 

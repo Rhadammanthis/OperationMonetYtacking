@@ -10,7 +10,7 @@ import {
   TextInput,
   BackHandler,
   Animated,
-  Platform,
+  TouchableOpacity,
   LayoutAnimation,
 } from 'react-native';
 import ActionButton from 'react-native-action-button';
@@ -120,8 +120,7 @@ class Main extends Component {
     this.dataStore = new DataStore(data, this.code);
 
     this.currentMonth = new Date().toISOString().substring(0, 7);
-    this.statusBarTheme =
-      Platform.OS === 'android' ? 'light-content' : 'dark-content';
+    this.statusBarTheme = 'light-content';
 
     StatusBar.setBackgroundColor('#005577', true);
   }
@@ -426,7 +425,6 @@ class Main extends Component {
           });
         }}
         position={'center'}
-        ref={'modal3'}
         isOpen={this.state.showSummary}
         animationDuration={350}
         swipeToClose={false}>
@@ -449,12 +447,13 @@ class Main extends Component {
             fontWeight: 'bold',
             fontSize: 20,
             color: 'white',
-            borderBottomLeftRadius: 10,
-            borderBottomRightRadius: 10,
+            // borderBottomLeftRadius: 10,
+            // borderBottomRightRadius: 10,
             backgroundColor: SPENDLESS_BLUE,
             justifyContent: 'center',
             alignItems: 'center',
             paddingVertical: 10,
+            borderRadius: 10,
           }}>
           {translate('main_monthly_summary_total')}{' '}
           {applyMoneyMask(monthsTotal)} {this.currency}
@@ -480,7 +479,6 @@ class Main extends Component {
         <LocalizedText
           localizationKey={'main_day_total'}
           style={{color: 'white', fontWeight: 'bold', fontSize: 17}}>
-          {' '}
           {applyMoneyMask(daysTotal)} {this.currency}
         </LocalizedText>
       );
@@ -578,7 +576,6 @@ class Main extends Component {
             this.setModalVisible(false);
           }}
           position={'center'}
-          ref={'modal3'}
           isOpen={this.state.modalVisible}>
           <View
             style={{
@@ -596,14 +593,17 @@ class Main extends Component {
               name={getIcon(this.state.catSelected)}
             />
           </View>
-          <View style={{flex: 1, padding: 10}}>
+          <View
+            style={{
+              flex: 1,
+              padding: 10,
+              justifyContent: 'space-between',
+            }}>
             <Text style={{fontSize: 20}}>
-              {' '}
-              {translate('main_add_expense_title')}{' '}
+              {translate('main_add_expense_title')}
             </Text>
-            <Text style={{fontSize: 15, marginTop: 5}}>
-              {' '}
-              {translate('main_add_expense_content')}{' '}
+            <Text style={{fontSize: 15}}>
+              {translate('main_add_expense_content')}
             </Text>
             <View style={{alignItems: 'center', flexDirection: 'row'}}>
               <TextInput
@@ -617,12 +617,13 @@ class Main extends Component {
                   marginVertical: 0,
                   borderBottomWidth: 2,
                   borderColor: getColor(this.state.catSelected),
+                  height: 50,
+                  paddingLeft: 10,
                 }}
               />
               <Text> {this.currency} </Text>
             </View>
-            <View style={{flex: 1}} />
-            <Button
+            <TouchableOpacity
               onPress={() => {
                 this.dataStore.addExpense(
                   this.state.selectedDay,
@@ -636,9 +637,16 @@ class Main extends Component {
                 color: 'white',
                 padding: 10,
               }}
-              color={getColor(this.state.catSelected)}
-              title={translate('main_add_expense_button')}
-            />
+              color={getColor(this.state.catSelected)}>
+              <Text
+                style={{
+                  fontSize: 15,
+                  marginTop: 5,
+                  color: getColor(this.state.catSelected),
+                }}>
+                {translate('main_add_expense_button')}
+              </Text>
+            </TouchableOpacity>
           </View>
         </Modal>
         {this._renderSummaryModal(this.currentMonth)}
@@ -654,9 +662,7 @@ class Main extends Component {
           spacing={15}
           verticalOrientation="down"
           position="right"
-          spacing={15}
           fixNativeFeedbackRadius={true}
-          position="right"
           backdrop={
             <View
               style={{

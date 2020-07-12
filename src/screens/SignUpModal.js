@@ -1,6 +1,6 @@
 import React, {Component} from 'react';
 import {
-  TouchableHighlight,
+  TouchableOpacity,
   View,
   Text,
   TextInput,
@@ -17,6 +17,7 @@ import {
   SPENDLESS_LIGHT_BLUE,
   HEIGHT,
   WIDTH,
+  ERROR_RED,
 } from '../data/consts';
 import LocalizedText from '../components/LocalizedText';
 
@@ -208,7 +209,7 @@ class SignUpModal extends Component {
                   fontSize: 18,
                 }}
               />
-              <TouchableHighlight
+              <TouchableOpacity
                 onPress={event => {
                   this.props.navigation.state.params.onCodeCreated(
                     code,
@@ -223,7 +224,7 @@ class SignUpModal extends Component {
                     style={{color: 'white'}}
                   />
                 </View>
-              </TouchableHighlight>
+              </TouchableOpacity>
             </View>
           ) : (
             <View style={{flex: 3}}>
@@ -263,7 +264,7 @@ class SignUpModal extends Component {
                 value={this.state.repeatPassword}
                 placeholder={translate('account_repeat_password_hint')}
               />
-              <TouchableHighlight
+              <TouchableOpacity
                 onPress={this.onSubmit.bind(
                   this,
                   this.state.email,
@@ -276,7 +277,7 @@ class SignUpModal extends Component {
                     style={{color: 'white'}}
                   />
                 </View>
-              </TouchableHighlight>
+              </TouchableOpacity>
             </View>
           )}
           <View style={{flex: 1}} />
@@ -350,9 +351,15 @@ const styles = StyleSheet.create({
     marginVertical: 20,
     paddingVertical: 10,
   },
-  textInput: {backgroundColor: 'white', borderRadius: 10, marginVertical: 5},
+  textInput: {
+    backgroundColor: 'white',
+    borderRadius: 10,
+    marginVertical: 5,
+    height: 50,
+    paddingLeft: 10,
+  },
   errorContainer: {
-    backgroundColor: '#AA3C3B',
+    backgroundColor: ERROR_RED,
     borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',

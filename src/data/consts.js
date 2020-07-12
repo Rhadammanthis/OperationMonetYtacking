@@ -15,6 +15,7 @@ export const panelOffset = Dimensions.get('window').height * -0.27;
 export const SPENDLESS_BLUE = '#005577';
 export const SPENDLESS_LIGHT_BLUE = 'rgba(0, 173, 245, 1)';
 export const SPENDLESS_LIGHT_BLUE_ALPHA = 'rgba(0, 173, 245, 0.25)';
+export const ERROR_RED = '#AA3C3B';
 
 //To add the little comma that goes with money text
 String.prototype.insert = function(idx, rem, str) {

@@ -1,6 +1,6 @@
 import React, {Component} from 'react';
 import {
-  TouchableHighlight,
+  TouchableOpacity,
   View,
   Image,
   Animated,
@@ -22,7 +22,7 @@ class Tutorial extends Component {
     const {animCloseButton} = this.state;
 
     return (
-      <TouchableHighlight
+      <TouchableOpacity
         onPress={() => {
           this.props.navigation.navigate('Currency');
         }}
@@ -46,7 +46,7 @@ class Tutorial extends Component {
             style={{color: 'white'}}
           />
         </Animated.View>
-      </TouchableHighlight>
+      </TouchableOpacity>
     );
   };
 

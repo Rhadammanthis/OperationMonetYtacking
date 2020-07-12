@@ -2,7 +2,7 @@ import React, {Component} from 'react';
 import {
   AsyncStorage,
   StyleSheet,
-  TouchableHighlight,
+  TouchableOpacity,
   View,
   Text,
   Image,
@@ -172,6 +172,8 @@ class Splash extends Component {
       },
     );
 
+    console.log(`Width: ${WIDTH}, Height: ${HEIGHT}`);
+
     this._retrieveSettings()
       .then(value =>
         this._retrieveData()
@@ -258,6 +260,8 @@ class Splash extends Component {
               backgroundColor: 'white',
               borderRadius: 10,
               marginVertical: 10,
+              height: 50,
+              paddingLeft: 10,
             }}
             value={this.state.code}
             placeholder={translate('splash_user_name')}
@@ -269,12 +273,14 @@ class Splash extends Component {
               backgroundColor: 'white',
               borderRadius: 10,
               marginVertical: 10,
+              height: 50,
+              paddingLeft: 10,
             }}
             secureTextEntry={true}
             value={this.state.password}
             placeholder={translate('splash_password')}
           />
-          <TouchableHighlight
+          <TouchableOpacity
             onPress={this.onSubmit.bind(this, code, password)}
             style={{borderRadius: 20}}>
             <View style={styles.button}>
@@ -283,8 +289,8 @@ class Splash extends Component {
                 style={{color: 'white'}}
               />
             </View>
-          </TouchableHighlight>
-          <TouchableHighlight
+          </TouchableOpacity>
+          <TouchableOpacity
             onPress={() =>
               this.props.navigation.navigate('SignUpModal', {
                 onCodeCreated: this.onCodeCreated,
@@ -299,7 +305,7 @@ class Splash extends Component {
                 marginVertical: 10,
               }}
             />
-          </TouchableHighlight>
+          </TouchableOpacity>
         </View>
         <View style={{flex: 1}} />
       </View>

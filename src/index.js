@@ -18,7 +18,12 @@ const AppNavigator = createStackNavigator(
     Splash: {screen: Splash},
     Currency: {screen: Currency},
     Tutorial: {screen: Tutorial},
-    Main: {screen: Main},
+    Main: {
+      screen: Main,
+      navigationOptions: {
+        gesturesEnabled: false,
+      },
+    },
     ShoppingList: {screen: ShoppingList},
     Profile: {screen: Profile},
   },
