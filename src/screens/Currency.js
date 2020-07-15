@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import {StackActions} from 'react-navigation';
 import LocalizedText from '../components/LocalizedText';
+import AnimatedButton from '../components/AnimatedButton';
 import * as Data from '../data/countries';
 import {
   WIDTH,
@@ -24,7 +25,10 @@ class Currency extends Component {
   constructor(props) {
     super(props);
     //161943 H&K
-    this.state = {selectedCountry: {}, animCloseButton: new Animated.Value(0)};
+    this.state = {
+      selectedCountry: {},
+      animCloseButton: new Animated.Value(0),
+    };
   }
 
   componentDidMount() {}
@@ -47,8 +51,7 @@ class Currency extends Component {
         onPress={ev => {
           this.setState({selectedCountry: country});
           springAnimation.start();
-        }}
-        style={{position: 'absolute'}}>
+        }}>
         <View
           style={[
             styles.countryContainer,
@@ -87,41 +90,27 @@ class Currency extends Component {
   };
 
   _renderAcceptButton = () => {
-    const {animCloseButton, selectedCountry} = this.state;
+    const {selectedCountry} = this.state;
+
+    let onPressHandler = () => {
+      this._storeData(selectedCountry)
+        .then(value => {
+          console.log(value);
+          this.props.navigation.dispatch(StackActions.popToTop());
+          return;
+        })
+        .catch(error => {
+          console.log(error);
+        });
+    };
 
     return (
-      <TouchableOpacity
-        onPress={evnt => {
-          this._storeData(selectedCountry)
-            .then(value => {
-              console.log(value);
-              this.props.navigation.dispatch(StackActions.popToTop());
-            })
-            .catch(error => {
-              console.log(error);
-            });
-        }}
-        style={{borderRadius: 20}}>
-        <Animated.View
-          style={[
-            styles.button,
-            {
-              transform: [
-                {
-                  translateY: animCloseButton.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [300, 20],
-                  }),
-                },
-              ],
-            },
-          ]}>
-          <LocalizedText
-            localizationKey={'currency_button'}
-            style={{color: 'white'}}
-          />
-        </Animated.View>
-      </TouchableOpacity>
+      <AnimatedButton
+        localizationKey="currency_button"
+        textStyle={{color: 'white'}}
+        onPress={onPressHandler}
+        show={Boolean(Object.keys(selectedCountry).length)}
+      />
     );
   };
 
@@ -140,7 +129,6 @@ class Currency extends Component {
         />
         <View style={styles.listContainer}>
           <FlatList
-            style={{backgroundColor: 'red', flex: 1}}
             data={Data.countries}
             renderItem={({item}) => {
               return <this.Item country={item} />;
@@ -159,18 +147,19 @@ class Currency extends Component {
 
 const styles = StyleSheet.create({
   listContainer: {
-    height: 500,
-    width: 500,
+    height: HEIGHT * 0.55,
+    width: WIDTH * 0.75,
     backgroundColor: 'white',
     borderRadius: 10,
     marginBottom: 15,
+    overflow: 'hidden',
   },
   title: {
     color: 'white',
     textAlign: 'center',
     fontSize: 25,
     maxWidth: WIDTH * 0.75,
-    marginVertical: 25,
+    marginBottom: 20,
   },
   countryContainer: {
     paddingHorizontal: 10,

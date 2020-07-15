@@ -33,7 +33,7 @@ import LocalizedText from '../components/LocalizedText';
 import {getColor, Categories, getName, getIcon} from '../data/categories';
 import DataStore from '../data/dataStore';
 
-const calendarDayTextSize = HEIGHT < 600 ? 14 : 15;
+const calendarDayTextSize = HEIGHT < 600 ? 14 : 17;
 const calendarMonthTextSize = HEIGHT < 600 ? 20 : 30;
 
 class Main extends Component {
@@ -515,7 +515,7 @@ class Main extends Component {
           horizontal={true}
           pagingEnabled={true}
           calendarWidth={WIDTH}
-          calendarHeight={HEIGHT * 0.525}
+          calendarHeight={400}
           onMonthChange={date => {
             this.updateCurrentMonth(date);
           }}
@@ -695,9 +695,7 @@ class Main extends Component {
           spacing={15}
           verticalOrientation="down"
           position="right"
-          spacing={15}
           fixNativeFeedbackRadius={true}
-          position="right"
           size={40}
           buttonColor={SPENDLESS_LIGHT_BLUE}
         />
