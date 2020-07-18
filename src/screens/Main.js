@@ -32,6 +32,7 @@ import {
 import LocalizedText from '../components/LocalizedText';
 import {getColor, Categories, getName, getIcon} from '../data/categories';
 import DataStore from '../data/dataStore';
+import DropUpActionButton from '../components/DropUpActionButton';
 
 const calendarDayTextSize = HEIGHT < 600 ? 14 : 17;
 const calendarMonthTextSize = HEIGHT < 600 ? 20 : 30;
@@ -172,151 +173,7 @@ class Main extends Component {
     this.forceUpdate();
   };
 
-  _shouldRenderActionButton = () => {
-    if (this.state.selectedDay)
-      return (
-        <ActionButton
-          offsetX={10}
-          offsetY={10}
-          spacing={15}
-          fixNativeFeedbackRadius={true}
-          position="right"
-          backdrop={
-            <View
-              style={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                height: HEIGHT,
-                width: WIDTH,
-                backgroundColor: 'black',
-                opacity: 0.7,
-              }}
-            />
-          }
-          size={45}
-          buttonColor="rgba(0, 173, 245, 1)">
-          <ActionButton.Item
-            textStyle={{color: 'white'}}
-            textContainerStyle={{
-              borderRadius: 5,
-              backgroundColor: getColor(Categories.Vegtables),
-              borderColor: getColor(Categories.Vegtables),
-            }}
-            buttonColor={getColor(Categories.Vegtables)}
-            title={getName(Categories.Vegtables)}
-            onPress={this.categoryButtonPressed.bind(
-              this,
-              Categories.Vegtables,
-            )}>
-            <Icon
-              size={20}
-              name={getIcon(Categories.Vegtables)}
-              color={'white'}
-            />
-          </ActionButton.Item>
-          <ActionButton.Item
-            textStyle={{color: 'white'}}
-            textContainerStyle={{
-              borderRadius: 5,
-              backgroundColor: getColor(Categories.Fruits),
-              borderColor: getColor(Categories.Fruits),
-            }}
-            buttonColor={getColor(Categories.Fruits)}
-            title={getName(Categories.Fruits)}
-            onPress={this.categoryButtonPressed.bind(this, Categories.Fruits)}>
-            <Icon size={20} name={getIcon(Categories.Fruits)} color={'white'} />
-          </ActionButton.Item>
-          <ActionButton.Item
-            textStyle={{color: 'white'}}
-            textContainerStyle={{
-              borderRadius: 5,
-              backgroundColor: getColor(Categories.Dairy),
-              borderColor: getColor(Categories.Dairy),
-            }}
-            buttonColor={getColor(Categories.Dairy)}
-            title={getName(Categories.Dairy)}
-            onPress={this.categoryButtonPressed.bind(this, Categories.Dairy)}>
-            <Icon size={20} name={getIcon(Categories.Dairy)} color={'white'} />
-          </ActionButton.Item>
-          <ActionButton.Item
-            textStyle={{color: 'white'}}
-            textContainerStyle={{
-              borderRadius: 5,
-              backgroundColor: getColor(Categories.Meet),
-              borderColor: getColor(Categories.Meet),
-            }}
-            buttonColor={getColor(Categories.Meet)}
-            title={getName(Categories.Meet)}
-            onPress={this.categoryButtonPressed.bind(this, Categories.Meet)}>
-            <Icon size={20} name={getIcon(Categories.Meet)} color={'white'} />
-          </ActionButton.Item>
-          <ActionButton.Item
-            textStyle={{color: 'white'}}
-            textContainerStyle={{
-              borderRadius: 5,
-              backgroundColor: getColor(Categories.Sweets),
-              borderColor: getColor(Categories.Sweets),
-            }}
-            buttonColor={getColor(Categories.Sweets)}
-            title={getName(Categories.Sweets)}
-            onPress={this.categoryButtonPressed.bind(this, Categories.Sweets)}>
-            <Icon size={20} name={getIcon(Categories.Sweets)} color={'white'} />
-          </ActionButton.Item>
-          <ActionButton.Item
-            textStyle={{color: 'white'}}
-            textContainerStyle={{
-              borderRadius: 5,
-              backgroundColor: getColor(Categories.Cereals),
-              borderColor: getColor(Categories.Cereals),
-            }}
-            buttonColor={getColor(Categories.Cereals)}
-            title={getName(Categories.Cereals)}
-            onPress={this.categoryButtonPressed.bind(this, Categories.Cereals)}>
-            <Icon
-              size={20}
-              name={getIcon(Categories.Cereals)}
-              color={'white'}
-            />
-          </ActionButton.Item>
-          <ActionButton.Item
-            textStyle={{color: 'white'}}
-            textContainerStyle={{
-              borderRadius: 5,
-              backgroundColor: getColor(Categories.Cleaning),
-              borderColor: getColor(Categories.Cleaning),
-            }}
-            buttonColor={getColor(Categories.Cleaning)}
-            title={getName(Categories.Cleaning)}
-            onPress={this.categoryButtonPressed.bind(
-              this,
-              Categories.Cleaning,
-            )}>
-            <Icon
-              size={20}
-              name={getIcon(Categories.Cleaning)}
-              color={'white'}
-            />
-          </ActionButton.Item>
-          <ActionButton.Item
-            textStyle={{color: 'white'}}
-            textContainerStyle={{
-              borderRadius: 5,
-              backgroundColor: getColor(Categories.Other),
-              borderColor: getColor(Categories.Other),
-            }}
-            buttonColor={getColor(Categories.Other)}
-            title={getName(Categories.Other)}
-            onPress={this.categoryButtonPressed.bind(this, Categories.Other)}>
-            <Icon size={20} name={getIcon(Categories.Other)} color={'white'} />
-          </ActionButton.Item>
-        </ActionButton>
-      );
-
-    return null;
-  };
-
-  categoryButtonPressed = category => {
+  onCategoryActionButtonPressed = category => {
     this.setState({catSelected: category});
     this.setModalVisible(!this.state.modalVisible);
   };
@@ -346,13 +203,13 @@ class Main extends Component {
   };
 
   render() {
-
     let monthCategoriesTotalsArray = this.dataStore.getMontsCategoriesTotals(
       this.currentMonth,
     );
-    let monthsTotal = this.dataStore.getMontsTotal(this.currentMonth);
-    const {showSummary} = this.state;
 
+    let monthsTotal = this.dataStore.getMontsTotal(this.currentMonth);
+
+    const {showSummary, selectedDay} = this.state;
 
     return (
       <View
@@ -586,7 +443,11 @@ class Main extends Component {
           size={40}
           buttonColor={SPENDLESS_LIGHT_BLUE}
         />
-        {this._shouldRenderActionButton()}
+        {selectedDay ? (
+          <DropUpActionButton
+            categoryButtonPressed={this.onCategoryActionButtonPressed}
+          />
+        ) : null}
       </View>
     );
   }
