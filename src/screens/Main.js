@@ -17,11 +17,11 @@ import ActionButton from 'react-native-action-button';
 import Icon from 'react-native-vector-icons/FontAwesome5';
 import Modal from 'react-native-modalbox';
 import {FlatGrid} from 'react-native-super-grid';
-import {PieChart} from 'react-native-svg-charts';
 import {translate} from '../localization';
 
 import ExpensesItem from '../components/ExpensesItem';
 import Draggable from '../components/Draggable';
+import SummaryModal from '../components/SummaryModal';
 import {
   applyMoneyMask,
   HEIGHT,
@@ -57,6 +57,7 @@ class Main extends Component {
         value: 0,
       },
       labelWidth: 0,
+      currentMonth: '',
     };
 
     LocaleConfig.locales['es'] = {
@@ -315,153 +316,6 @@ class Main extends Component {
     return null;
   };
 
-  _renderSummaryModal = currentMonth => {
-    let monthCategoriesTotalsArray = this.dataStore.getMontsCategoriesTotals(
-      currentMonth,
-    );
-    let monthsTotal = this.dataStore.getMontsTotal(currentMonth);
-
-    //To prevent excessive state updates
-    if (this.state.showSummary === true && this.state.selectedSlice.value === 0)
-      this.setState({
-        selectedSlice: {
-          value: applyMoneyMask(monthCategoriesTotalsArray.vgt),
-          label: 'vgt',
-        },
-      });
-
-    const {selectedSlice} = this.state;
-    const {label, value} = selectedSlice;
-
-    const pieChartData = Object.keys(monthCategoriesTotalsArray).map(
-      (key, index) => {
-        return {
-          key,
-          value: monthCategoriesTotalsArray[key],
-          svg: {fill: getColor(key)},
-          arc: {outerRadius: '90%', padAngle: label === key ? 0.05 : 0},
-          onPress: () => {
-            LayoutAnimation.configureNext(LayoutAnimation.Presets.spring);
-            this.setState({
-              selectedSlice: {
-                label: key,
-                value: applyMoneyMask(monthCategoriesTotalsArray[key]),
-              },
-            });
-          },
-        };
-      },
-    );
-
-    let _renderPieChart = () => {
-      return monthsTotal > 0 ? (
-        <View style={{justifyContent: 'center', flex: 1}}>
-          <PieChart
-            style={{height: HEIGHT * 0.5}}
-            outerRadius={'90%'}
-            innerRadius={'55%'}
-            data={pieChartData}
-          />
-          <View
-            style={{
-              left: 350 / 2 - WIDTH * 0.2,
-              position: 'absolute',
-              width: WIDTH * 0.4,
-              height: WIDTH * 0.4,
-              borderRadius: WIDTH * 0.2,
-              borderWidth: 4,
-              borderColor: getColor(label),
-              backgroundColor: '#EEE',
-              padding: 5,
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}>
-            <Icon
-              style={{marginTop: 5}}
-              size={50}
-              color={getColor(label)}
-              name={getIcon(label)}
-            />
-            <Text
-              adjustsFontSizeToFit
-              style={{
-                color: getColor(label),
-                marginTop: 5,
-                textAlign: 'center',
-              }}>
-              {getName(label)}
-            </Text>
-            <Text style={{color: getColor(label), fontSize: 17}}>
-              {value} {this.currency}
-            </Text>
-          </View>
-        </View>
-      ) : (
-        <Text
-          style={{
-            color: 'black',
-            textAlign: 'center',
-            color: 'white',
-            fontSize: 17,
-          }}>
-          {' '}
-          {translate('main_monthly_summary_no_data')}{' '}
-        </Text>
-      );
-    };
-
-    return (
-      <Modal
-        style={{
-          height: HEIGHT * 0.6,
-          width: 350,
-          borderRadius: 10,
-          backgroundColor: SPENDLESS_BLUE,
-        }}
-        onClosed={() => {
-          this.setState({
-            showSummary: false,
-            selectedSlice: {label: 'vgt', value: 0},
-          });
-        }}
-        position={'center'}
-        isOpen={this.state.showSummary}
-        animationDuration={350}
-        swipeToClose={false}>
-        <LocalizedText
-          localizationKey={'main_monthly_summary_title'}
-          style={{
-            textAlign: 'center',
-            paddingLeft: 10,
-            fontSize: 25,
-            color: 'white',
-            paddingVertical: 10,
-          }}
-        />
-        <View style={{justifyContent: 'center', flex: 1}}>
-          {_renderPieChart()}
-        </View>
-        <Text
-          style={{
-            textAlign: 'center',
-            fontWeight: 'bold',
-            fontSize: 20,
-            color: 'white',
-            // borderBottomLeftRadius: 10,
-            // borderBottomRightRadius: 10,
-            backgroundColor: SPENDLESS_BLUE,
-            justifyContent: 'center',
-            alignItems: 'center',
-            paddingVertical: 10,
-            borderRadius: 10,
-          }}>
-          {translate('main_monthly_summary_total')}{' '}
-          {applyMoneyMask(monthsTotal)} {this.currency}
-        </Text>
-      </Modal>
-    );
-  };
-
   categoryButtonPressed = category => {
     this.setState({catSelected: category});
     this.setModalVisible(!this.state.modalVisible);
@@ -492,6 +346,14 @@ class Main extends Component {
   };
 
   render() {
+
+    let monthCategoriesTotalsArray = this.dataStore.getMontsCategoriesTotals(
+      this.currentMonth,
+    );
+    let monthsTotal = this.dataStore.getMontsTotal(this.currentMonth);
+    const {showSummary} = this.state;
+
+
     return (
       <View
         style={{
@@ -649,7 +511,15 @@ class Main extends Component {
             </TouchableOpacity>
           </View>
         </Modal>
-        {this._renderSummaryModal(this.currentMonth)}
+        <SummaryModal
+          show={showSummary}
+          currency={this.currency}
+          onClose={() => {
+            this.setState({showSummary: false});
+          }}
+          monthTotal={monthsTotal}
+          categoriesTotal={monthCategoriesTotalsArray}
+        />
         <ActionButton
           onPress={() => {
             this.setState({showSummary: true});
