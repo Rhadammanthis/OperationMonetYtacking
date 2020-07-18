@@ -51,6 +51,13 @@ buck-out/
 */fastlane/report.xml
 */fastlane/Preview.html
 */fastlane/screenshots
+*/fastlane/metadata
+
+#Google Playstore API Key
+google-playstore-api-key.json
+
+#Android keystore
+android/app/spendless-keystore.jks
 
 # Bundle artifact
 *.jsbundle
