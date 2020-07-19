@@ -1,19 +1,16 @@
 import React, {Component} from 'react';
 import {LocaleConfig, CalendarList} from 'react-native-calendars';
 import {
-  StyleSheet,
   Keyboard,
   View,
   Text,
   StatusBar,
-  Button,
   TextInput,
   BackHandler,
   Animated,
   TouchableOpacity,
   LayoutAnimation,
 } from 'react-native';
-import ActionButton from 'react-native-action-button';
 import Icon from 'react-native-vector-icons/FontAwesome5';
 import Modal from 'react-native-modalbox';
 import {FlatGrid} from 'react-native-super-grid';
@@ -22,17 +19,12 @@ import {translate} from '../localization';
 import ExpensesItem from '../components/ExpensesItem';
 import Draggable from '../components/Draggable';
 import SummaryModal from '../components/SummaryModal';
-import {
-  applyMoneyMask,
-  HEIGHT,
-  WIDTH,
-  SPENDLESS_BLUE,
-  SPENDLESS_LIGHT_BLUE,
-} from '../data/consts';
+import {applyMoneyMask, HEIGHT, WIDTH, SPENDLESS_BLUE} from '../data/consts';
 import LocalizedText from '../components/LocalizedText';
-import {getColor, Categories, getName, getIcon} from '../data/categories';
+import {getColor, Categories, getIcon} from '../data/categories';
 import DataStore from '../data/dataStore';
 import DropUpActionButton from '../components/DropUpActionButton';
+import ToolTipMenu from '../components/ToolTipMenu';
 
 const calendarDayTextSize = HEIGHT < 600 ? 14 : 17;
 const calendarMonthTextSize = HEIGHT < 600 ? 20 : 30;
@@ -377,71 +369,11 @@ class Main extends Component {
           monthTotal={monthsTotal}
           categoriesTotal={monthCategoriesTotalsArray}
         />
-        <ActionButton
-          onPress={() => {
-            this.setState({showSummary: true});
+        <ToolTipMenu
+          navigation={this.props.navigation}
+          modalStateHandler={modalState => {
+            this.setState({showSummary: modalState});
           }}
-          renderIcon={active => {
-            return <Icon color={'white'} size={15} name="chart-line" />;
-          }}
-          offsetY={15}
-          offsetX={120}
-          spacing={15}
-          verticalOrientation="down"
-          position="right"
-          fixNativeFeedbackRadius={true}
-          backdrop={
-            <View
-              style={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                height: HEIGHT,
-                width: WIDTH,
-                backgroundColor: 'black',
-                opacity: 1,
-              }}
-            />
-          }
-          size={40}
-          buttonColor={SPENDLESS_LIGHT_BLUE}
-        />
-        <ActionButton
-          onPress={() => {
-            console.log('CODE', this.code);
-            this.props.navigation.navigate('ShoppingList', {
-              shopping: this.shopping,
-              code: this.code,
-            });
-          }}
-          renderIcon={active => {
-            return <Icon color={'white'} size={15} name="tasks" />;
-          }}
-          offsetY={15}
-          offsetX={70}
-          spacing={15}
-          verticalOrientation="down"
-          position="right"
-          fixNativeFeedbackRadius={true}
-          size={40}
-          buttonColor={SPENDLESS_LIGHT_BLUE}
-        />
-        <ActionButton
-          onPress={() => {
-            console.log('CODE', this.code);
-            this.props.navigation.navigate('Profile', {code: this.code});
-          }}
-          renderIcon={active => {
-            return <Icon color={'white'} size={15} name="user" />;
-          }}
-          offsetY={15}
-          offsetX={20}
-          verticalOrientation="down"
-          position="right"
-          spacing={15}
-          fixNativeFeedbackRadius={true}
-          size={40}
-          buttonColor={SPENDLESS_LIGHT_BLUE}
         />
         {selectedDay ? (
           <DropUpActionButton
