@@ -1,4 +1,3 @@
-import pusher from '../data/pusher';
 import Pusher from '../data/pusher';
 
 class DataStore {
@@ -13,7 +12,7 @@ class DataStore {
 
   constructor(data, code) {
     this.data = data;
-    Object.keys(this.data).map((day, i) => {
+    Object.keys(this.data).map(day => {
       this.markedDates[day] = {marked: true};
     });
     this.pusher = new Pusher(code);
@@ -82,14 +81,14 @@ class DataStore {
     let dayData = this.data[day].expenses || null;
     this.history = this.data[day].history;
 
-    this.dayExpenses = Object.keys(dayData).map((key, index) => {
+    this.dayExpenses = Object.keys(dayData).map(key => {
       return {key: key, amount: dayData[key]};
     });
 
     this.setDaysTotal(day);
   };
 
-  setDaysTotal = day => {
+  setDaysTotal = () => {
     if (this.dayExpenses.length <= 0) {
       this.daysTotal = 0;
       return;
@@ -111,10 +110,10 @@ class DataStore {
   getMontsCategoriesTotals = month => {
     let totals = {};
 
-    Object.keys(this.data).map((day, i) => {
+    Object.keys(this.data).map(day => {
       if (day.indexOf(month) == -1) return null;
 
-      Object.keys(this.data[day].expenses).map((category, i) => {
+      Object.keys(this.data[day].expenses).map(category => {
         totals[category] = totals[category] || 0;
         totals[category] += this.data[day].expenses[category];
       });
@@ -127,7 +126,7 @@ class DataStore {
     let total = 0;
     let categoriesTotal = this.getMontsCategoriesTotals(month);
 
-    Object.keys(categoriesTotal).map((category, i) => {
+    Object.keys(categoriesTotal).map(category => {
       total += categoriesTotal[category];
     });
 

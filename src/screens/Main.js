@@ -25,6 +25,7 @@ import {getColor, Categories, getIcon} from '../data/categories';
 import DataStore from '../data/dataStore';
 import DropUpActionButton from '../components/DropUpActionButton';
 import ToolTipMenu from '../components/ToolTipMenu';
+import DaysTotal from '../components/DaysTotal';
 
 const calendarDayTextSize = HEIGHT < 600 ? 14 : 17;
 const calendarMonthTextSize = HEIGHT < 600 ? 20 : 30;
@@ -174,22 +175,6 @@ class Main extends Component {
     this.setState({modalVisible: visible});
   }
 
-  _renderDayTotal = () => {
-    var daysTotal = this.dataStore.getDaysTotal();
-
-    if (daysTotal) {
-      return (
-        <LocalizedText
-          localizationKey={'main_day_total'}
-          style={{color: 'white', fontWeight: 'bold', fontSize: 17}}>
-          {applyMoneyMask(daysTotal)} {this.currency}
-        </LocalizedText>
-      );
-    }
-
-    return null;
-  };
-
   updateCurrentMonth = date => {
     this.currentMonth = date.dateString.substring(0, 7);
   };
@@ -200,6 +185,8 @@ class Main extends Component {
     );
 
     let monthsTotal = this.dataStore.getMontsTotal(this.currentMonth);
+
+    let daysTotal = this.dataStore.getDaysTotal();
 
     const {showSummary, selectedDay} = this.state;
 
@@ -263,18 +250,7 @@ class Main extends Component {
             )}
           />
         </Draggable>
-        <View
-          style={{
-            backgroundColor: '#005577',
-            width: WIDTH,
-            alignItems: 'center',
-            justifyContent: 'center',
-            height: 60,
-            position: 'absolute',
-            bottom: 0,
-          }}>
-          {this._renderDayTotal()}
-        </View>
+        <DaysTotal currency={this.currency} total={daysTotal} />
         {/* ***************** MODAL ****************** */}
         <Modal
           style={{
@@ -375,11 +351,10 @@ class Main extends Component {
             this.setState({showSummary: modalState});
           }}
         />
-        {selectedDay ? (
-          <DropUpActionButton
-            categoryButtonPressed={this.onCategoryActionButtonPressed}
-          />
-        ) : null}
+        <DropUpActionButton
+          show={selectedDay}
+          categoryButtonPressed={this.onCategoryActionButtonPressed}
+        />
       </View>
     );
   }

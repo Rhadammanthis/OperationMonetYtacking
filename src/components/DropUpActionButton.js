@@ -8,7 +8,7 @@ import {HEIGHT, WIDTH} from '../data/consts';
 import {palette} from '../theme';
 
 let DropUpActionButton = props => {
-  const {categoryButtonPressed} = props;
+  const {categoryButtonPressed, show} = props;
 
   const buttonItems = Object.keys(Categories).map((cat, index) => {
     return (
@@ -30,7 +30,7 @@ let DropUpActionButton = props => {
     );
   });
 
-  return (
+  return show ? (
     <ActionButton
       offsetX={10}
       offsetY={10}
@@ -44,7 +44,7 @@ let DropUpActionButton = props => {
       buttonColor="rgba(0, 173, 245, 1)">
       {buttonItems}
     </ActionButton>
-  );
+  ) : null;
 };
 
 const styles = StyleSheet.create({
