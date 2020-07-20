@@ -1,31 +1,27 @@
 import React, {Component} from 'react';
 import {LocaleConfig, CalendarList} from 'react-native-calendars';
 import {
-  Keyboard,
   View,
-  Text,
   StatusBar,
-  TextInput,
   BackHandler,
   Animated,
-  TouchableOpacity,
   LayoutAnimation,
+  StyleSheet,
 } from 'react-native';
-import Icon from 'react-native-vector-icons/FontAwesome5';
-import Modal from 'react-native-modalbox';
 import {FlatGrid} from 'react-native-super-grid';
 import {translate} from '../localization';
 
 import ExpensesItem from '../components/ExpensesItem';
 import Draggable from '../components/Draggable';
 import SummaryModal from '../components/SummaryModal';
-import {applyMoneyMask, HEIGHT, WIDTH, SPENDLESS_BLUE} from '../data/consts';
-import LocalizedText from '../components/LocalizedText';
-import {getColor, Categories, getIcon} from '../data/categories';
+import {HEIGHT, WIDTH, SPENDLESS_BLUE} from '../data/consts';
+import {Categories} from '../data/categories';
 import DataStore from '../data/dataStore';
 import DropUpActionButton from '../components/DropUpActionButton';
 import ToolTipMenu from '../components/ToolTipMenu';
 import DaysTotal from '../components/DaysTotal';
+import {palette} from '../theme';
+import LogExpenseModal from '../components/LogExpenseModal';
 
 const calendarDayTextSize = HEIGHT < 600 ? 14 : 17;
 const calendarMonthTextSize = HEIGHT < 600 ? 20 : 30;
@@ -168,12 +164,12 @@ class Main extends Component {
 
   onCategoryActionButtonPressed = category => {
     this.setState({catSelected: category});
-    this.setModalVisible(!this.state.modalVisible);
+    this.setState({modalVisible: true});
   };
 
-  setModalVisible(visible) {
-    this.setState({modalVisible: visible});
-  }
+  hideModal = () => {
+    this.setState({modalVisible: false});
+  };
 
   updateCurrentMonth = date => {
     this.currentMonth = date.dateString.substring(0, 7);
@@ -188,15 +184,10 @@ class Main extends Component {
 
     let daysTotal = this.dataStore.getDaysTotal();
 
-    const {showSummary, selectedDay} = this.state;
+    const {showSummary, selectedDay, catSelected, modalVisible} = this.state;
 
     return (
-      <View
-        style={{
-          flexDirection: 'column',
-          flex: 1,
-          backgroundColor: SPENDLESS_BLUE,
-        }}>
+      <View style={styles.container}>
         <StatusBar barStyle={this.statusBarTheme} />
         <CalendarList
           theme={{
@@ -223,16 +214,9 @@ class Main extends Component {
           }}
           markedDates={this.dataStore.markedDates}
         />
-        <Draggable
-          style={{
-            height: HEIGHT * 0.73,
-            flexDirection: 'column',
-            backgroundColor: '#EEE',
-            borderTopRightRadius: 15,
-            borderTopLeftRadius: 15,
-          }}>
+        <Draggable style={[styles.draggableContainer, {height: HEIGHT * 0.73}]}>
           <FlatGrid
-            style={{flex: 1}}
+            style={styles.gridContainer}
             itemDimension={(WIDTH - 50) / 3}
             items={this.dataStore.dayExpenses}
             renderItem={({item, index}) => (
@@ -240,7 +224,7 @@ class Main extends Component {
                 item={item}
                 index={index}
                 onPress={() => {
-                  this.categoryButtonPressed(item.key);
+                  this.onCategoryActionButtonPressed(item.key);
                 }}
                 navigation={this.props.navigation}
                 currency={this.currency}
@@ -251,91 +235,14 @@ class Main extends Component {
           />
         </Draggable>
         <DaysTotal currency={this.currency} total={daysTotal} />
-        {/* ***************** MODAL ****************** */}
-        <Modal
-          style={{
-            height: 190,
-            width: 350,
-            borderRadius: 10,
-            flexDirection: 'row',
+        <LogExpenseModal
+          category={catSelected}
+          onExpenseLoggedHandler={amount => {
+            this.dataStore.addExpense(selectedDay, catSelected, amount);
           }}
-          onClosed={() => {
-            this.setModalVisible(false);
-          }}
-          position={'center'}
-          isOpen={this.state.modalVisible}>
-          <View
-            style={{
-              height: 190,
-              width: 100,
-              justifyContent: 'center',
-              alignItems: 'center',
-              borderTopLeftRadius: 10,
-              borderBottomLeftRadius: 10,
-              backgroundColor: getColor(this.state.catSelected),
-            }}>
-            <Icon
-              size={70}
-              color={'white'}
-              name={getIcon(this.state.catSelected)}
-            />
-          </View>
-          <View
-            style={{
-              flex: 1,
-              padding: 10,
-              justifyContent: 'space-between',
-            }}>
-            <Text style={{fontSize: 20}}>
-              {translate('main_add_expense_title')}
-            </Text>
-            <Text style={{fontSize: 15}}>
-              {translate('main_add_expense_content')}
-            </Text>
-            <View style={{alignItems: 'center', flexDirection: 'row'}}>
-              <TextInput
-                onSubmitEditing={Keyboard.dismiss}
-                placeholder={translate('main_add_expense_hint')}
-                value={this.state.amount}
-                onChangeText={text => this.setState({amount: text})}
-                keyboardType={'numeric'}
-                style={{
-                  flex: 1,
-                  marginVertical: 0,
-                  borderBottomWidth: 2,
-                  borderColor: getColor(this.state.catSelected),
-                  height: 50,
-                  paddingLeft: 10,
-                }}
-              />
-              <Text> {this.currency} </Text>
-            </View>
-            <TouchableOpacity
-              onPress={() => {
-                this.dataStore.addExpense(
-                  this.state.selectedDay,
-                  this.state.catSelected,
-                  this.state.amount,
-                );
-                this.setState({amount: ''});
-                this.setModalVisible(!this.state.modalVisible);
-              }}
-              style={{
-                color: 'white',
-                padding: 10,
-              }}
-              color={getColor(this.state.catSelected)}>
-              <Text
-                style={{
-                  fontSize: 15,
-                  marginTop: 5,
-                  color: getColor(this.state.catSelected),
-                }}>
-                {translate('main_add_expense_button')}
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </Modal>
+          onModalCLosed={this.hideModal}
+          visible={modalVisible}
+        />
         <SummaryModal
           show={showSummary}
           currency={this.currency}
@@ -359,5 +266,20 @@ class Main extends Component {
     );
   }
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flexDirection: 'column',
+    flex: 1,
+    backgroundColor: SPENDLESS_BLUE,
+  },
+  draggableContainer: {
+    flexDirection: 'column',
+    backgroundColor: palette.basic.lightGray,
+    borderTopRightRadius: 15,
+    borderTopLeftRadius: 15,
+  },
+  gridContainer: {flex: 1},
+});
 
 export default Main;
